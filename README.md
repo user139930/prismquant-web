@@ -102,14 +102,27 @@ IVE / HKIIT，Group 1。
 
 ## 怎麼跑
 
+### 一鍵啟動（推薦，接上所有能接的數據）
+雙擊 **`start-all.cmd`**。它會自動依序：
+
+1. 確認 PostgreSQL 在跑（沒跑就嘗試啟動）
+2. 啟動 A2 政要監控後端（在獨立視窗，`127.0.0.1:8000`）
+3. 起前端靜態伺服器（`localhost:5173`）並開瀏覽器，自動帶上 `?api=` 連上後端
+
+之後政要監控頁直接顯示真數據、新聞情報頁顯示快照。**啟動器視窗開著別關。**
+
+> 前提：A2 的 `political-monitor` 在 `C:\Users\Admin\Downloads\group1-main\一些功能\political-monitor`，
+> 且已經建好 `.venv`。路徑若不同，編輯 `start-all.py` 開頭的 `A2_DIR` 即可。
+> `start-all.cmd` 只是個 ASCII 薄殼，真正做事的是 `start-all.py`（Python 處理中文路徑不會亂碼）。
+
 ### 只是想看
 雙擊 `index.html`。介面會完整渲染；接上數據的頁面（政要監控、新聞情報）顯示真數據，
 還沒接上的顯示空狀態並寫清楚缺什麼。
 
 因為是 `file://`，瀏覽器會擋掉 `fetch`，所以**兩個來源都讀不到**——
-要看到數據就用 `start-frontend.cmd` 或 `tools/api_server.py`（下面有）。
+要看到數據就用 `start-all.cmd`（推薦）或下面的手動方式。
 
-### 要接真實的政要監控 API
+### 要接真實的政要監控 API（手動）
 先起 A2 服務（另一個 FastAPI 專案），把這個來源加進白名單，然後重啟 API：
 
 ```dotenv
@@ -297,7 +310,9 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 ├── manifest.webmanifest    PWA 設定
 ├── sw.js                   service worker（network-first）
 ├── icon.svg                App 圖示（用 SVG，所以仍是純文字檔）
-├── start-frontend.cmd      本機預覽伺服器（Windows）
+├── start-all.cmd           一鍵啟動器（薄殼，呼叫 start-all.py）
+├── start-all.py            一鍵啟動邏輯：PostgreSQL → A2 後端 → 前端
+├── start-frontend.cmd      只起前端（不碰後端）
 ├── docs/
 │   ├── DESIGN.zh.md        設計規格——資訊架構、字級、i18n、狀態處理
 │   └── INTEGRATION.zh.md   整合說明——CORS、掛載、資料來源

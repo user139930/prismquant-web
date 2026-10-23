@@ -58,15 +58,24 @@ function verTag(v) {
 }
 
 function viewPolitical() {
-  if (!A2.live) return emptyPage('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'), [
-    [isZh() ? '运行中的 A2 后端（FastAPI，默认 :8000）' : 'A2 backend on :8000', '<span class="tag amber">未连接</span>'],
-    [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', '<span class="tag amber">待运行</span>']
-  ], isZh()
-    ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。启动后端后点右上角「连接设置」或按刷新即可。<br>启动方式：<code>python -X utf8 -m app</code>（在 political-monitor 目录）。'
+  if (!A2.live) {
+    const note = (isZh()
+      ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。点下面的按钮，我会去探测本机后端；若后端没在跑，请双击 <code>start-all.cmd</code> 一键启动，再回来点一下。'
+      : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Click the button below to probe the backend; if it isn't running, double-click <code>start-all.cmd</code> then come back.")
       + (location.protocol === 'file:'
-        ? '<br><br><b>你现在是用 file:// 双击打开的。</b>浏览器会封堵这种页面发出的跨域请求，所以永远连不上本机 API —— 这是浏览器安全规定，不是程序的问题。请改按下面的做法：<br>① 双击 <code>start-frontend.cmd</code>；② 用 <code>http://localhost:5173</code> 打开。<br><a href="http://localhost:5173/index.html?skip=1&api=http://127.0.0.1:8000#/political" style="color:#c8453a">点这里直接试 →</a>'
-        : '')
-    : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Start the backend, then refresh.");
+        ? (isZh()
+          ? '<br><br><b>你现在是用 file:// 双击打开的。</b>浏览器会封堵这种页面发出的跨域请求，所以永远连不上本机 API —— 这是浏览器安全规定，不是程序的问题。请改按下面的做法：<br>① 双击 <code>start-all.cmd</code>；② 用 <code>http://localhost:5173</code> 打开。<br><a href="http://localhost:5173/index.html?skip=1&api=http://127.0.0.1:8000#/political" style="color:#c8453a">点这里直接试 →</a>'
+          : '<br><br><b>You opened this via file://.</b> Browsers block cross-origin requests from such pages, so it can never reach the local API. Double-click <code>start-all.cmd</code> and open via <code>http://localhost:5173</code> instead.')
+        : '');
+    const actionHtml = `<div style="margin-top:16px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">
+        <button class="btn" data-act="auto-connect" style="font-size:13px">⟳ ${isZh() ? '自动连接 A2 后端' : 'Auto-connect A2 backend'}</button>
+        <span class="micro" id="ac-status" style="color:#a9b0bb">${isZh() ? '状态：未探测' : 'Status: not probed'}</span>
+      </div>`;
+    return emptyPage('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'), [
+      [isZh() ? '运行中的 A2 后端（FastAPI，默认 :8000）' : 'A2 backend on :8000', '<span class="tag amber">未连接</span>'],
+      [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', '<span class="tag amber">待运行</span>']
+    ], note + actionHtml);
+  }
   const demo = !A2.live;
   const recordsCount = demo ? POL_DEMO_RECORDS.length : A2.records.length;
   return pageHead('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'),

@@ -101,6 +101,20 @@ async function probe() {
   renderNav(routeName());
   if (routeName() === 'political') render();
 }
+async function autoConnect() {
+  const st = $('#ac-status');
+  if (st) st.textContent = isZh() ? '状态：正在探测 127.0.0.1:8000 …' : 'Status: probing 127.0.0.1:8000 …';
+  await probe();
+  if (A2.live) {
+    toast(isZh() ? '已连接到 A2 后端' : 'Connected to the A2 backend');
+  } else {
+    const s2 = $('#ac-status');
+    if (s2) s2.innerHTML = isZh()
+      ? '状态：<b>未连接</b> —— 后端没在跑。请双击 <code>start-all.cmd</code> 一键启动，再回来点一次。'
+      : 'Status: <b>offline</b> — backend not running. Double-click <code>start-all.cmd</code>, then retry.';
+    toast(isZh() ? '未连接：请先启动后端（start-all.cmd）' : 'Not connected: start the backend first');
+  }
+}
 async function loadSys() {
   try { A2.sys = await apiGet('/api/v1/system-status'); A2.sysErr = null; }
   catch (e) { A2.sysErr = e.message; }
@@ -237,6 +251,7 @@ document.addEventListener('click', e => {
     else if (act === 'pause') { toast(isZh() ? '已暂停新开仓（模拟）· 持仓保留' : 'New entries paused (simulated); positions kept'); }
     else if (act === 'flatten') { toast(isZh() ? '紧急平仓需二次确认；演示环境未发送任何委托' : 'Flatten requires confirmation; nothing routed in demo'); }
     else if (act === 'refresh-pol') { if (A2.live) { loadRecords(false); loadSys(); } else { probe(); toast(isZh() ? '正在尝试连接后端…' : 'Probing backend…'); } }
+    else if (act === 'auto-connect') { autoConnect(); }
     else if (act === 'open-settings') { openSettings(); }
     else if (act === 'copy-body') {
       const b = document.querySelector('#pol-detail .body-text');
