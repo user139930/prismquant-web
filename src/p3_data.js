@@ -6,7 +6,7 @@ const I18N = {
   zh: {
     'brand.sub': '棱镜量化 · 多市场研究终端',
     'g.today': '今日', 'g.research': '研究', 'g.exec': '执行', 'g.account': '账户',
-    'nav.briefing': '晨报', 'nav.news': '新闻情报', 'nav.political': '政要监控',
+    'nav.overview': '接入状态', 'nav.briefing': '晨报', 'nav.news': '新闻情报', 'nav.political': '政要监控',
     'nav.strategy': '策略与回测', 'nav.risk': '风控闸门', 'nav.chat': '代理对话',
     'nav.portfolio': '持仓与绩效', 'nav.academy': '学院',
     'page.briefing.t': '晨报', 'page.briefing.s': 'A5 指挥官聚合四个专业代理的夜间产出，给出一份十分钟可读完的决策输入。',
@@ -44,7 +44,7 @@ const I18N = {
   en: {
     'brand.sub': 'Multi-market research terminal',
     'g.today': 'Today', 'g.research': 'Research', 'g.exec': 'Execution', 'g.account': 'Account',
-    'nav.briefing': 'Briefing', 'nav.news': 'News', 'nav.political': 'Political watch',
+    'nav.overview': 'Status', 'nav.briefing': 'Briefing', 'nav.news': 'News', 'nav.political': 'Political watch',
     'nav.strategy': 'Strategy', 'nav.risk': 'Risk gates', 'nav.chat': 'Commander',
     'nav.portfolio': 'Portfolio', 'nav.academy': 'Academy',
     'page.briefing.t': 'Morning briefing', 'page.briefing.s': 'A5 aggregates the overnight output of four specialist agents into a ten-minute decision input.',
@@ -195,125 +195,9 @@ function drawdowns(series) {
 const DD = drawdowns(NAV);
 
 const D = {
-  ticks: [
-    { sym: 'NDX', label: '纳指 100', last: 21684.2, chg: 0.82 },
-    { sym: 'HSI', label: '恒生指数', last: 25941.6, chg: 0.34 },
-    { sym: 'SPX', label: '标普 500', last: 6412.8, chg: 0.41 },
-    { sym: 'BTC', label: 'BTC/USD', last: 91850, chg: -4.71 },
-    { sym: 'US10Y', label: '美债 10Y', last: 4.132, chg: -0.06 },
-    { sym: 'DXY', label: '美元指数', last: 98.42, chg: -0.18 },
-    { sym: 'XAU', label: '黄金', last: 4012.5, chg: 0.63 },
-    { sym: 'CL', label: 'WTI 原油', last: 68.94, chg: -1.12 }
-  ],
-  agents: [
-    { id: 'A1', name: '新闻代理', en: 'News', desc: '38 条新闻归并为 6 个事件簇', desc_en: '38 items merged into 6 clusters', state: 'ok', meta: '08:00', code: '38→6' },
-    { id: 'A2', name: '政治监控', en: 'Political', desc: '2 位人物 · 12 条新发言', desc_en: '2 figures · 12 new statements', state: 'ok', meta: '07:12', code: '12 新增' },
-    { id: 'A3', name: '执行代理', en: 'Execution', desc: '4 张意图，1 张被否', desc_en: '4 intents, 1 vetoed', state: 'ok', meta: '08:14', code: '4 意图' },
-    { id: 'A4', name: '风险控制', en: 'Risk', desc: '否决 1 · 降级 1 · 熔断未触发', desc_en: '1 veto · 1 degrade · breaker clear', state: 'warn', meta: '08:14', code: '2 干预' },
-    { id: 'A5', name: '指挥官', en: 'Commander', desc: '晨报已生成，等待确认', desc_en: 'Brief generated, awaiting confirm', state: 'ok', meta: '08:16', code: '1 份' }
-  ],
-  recs: [
-    {
-      sym: 'NVDA', name: 'NVIDIA Corp.', mkt: 'US', side: 'long', score: 87.4,
-      target: '178.0 – 186.0', last: 171.06, chg: 2.14, horizon: '4–8 周',
-      thesis: 'AI 资本开支预期上修，动量因子由负转正；A2 未检出相关政策风险事件；行业敞口 24.1%，通过 A4 检查。',
-      votes: [1, 1, 1, 1], veto: false
-    },
-    {
-      sym: 'AVGO', name: 'Broadcom Inc.', mkt: 'US', side: 'hold', score: 82.1,
-      target: '402.0 – 418.0', last: 389.2, chg: 0.93, horizon: '6–10 周',
-      thesis: '基本面评分居前三，但加仓意图被 A4 否决：半导体行业集中度 31.4%，超过 30% 上限，维持现有仓位。',
-      votes: [1, 1, 1, 0], veto: true
-    },
-    {
-      sym: '0700.HK', name: '腾讯控股', mkt: 'HK', side: 'long', score: 71.6,
-      target: '585.0 – 612.0', last: 596.5, chg: 1.28, horizon: '4–6 周',
-      thesis: '南向资金连续 11 日净流入；估值因子回到五年 34 分位；港币流动性边际改善。',
-      votes: [1, 1, 1, 1], veto: false
-    },
-    {
-      sym: 'BTC/USD', name: 'Bitcoin', mkt: 'CRYPTO', side: 'reduce', score: 34.2,
-      target: '88,500 – 92,000', last: 91850, chg: -4.71, horizon: '1–3 周',
-      thesis: '趋势因子转为负值，30 日波动率抬升至 62%；A4 建议仓位由 6.2% 降至 3.0%，分批执行。',
-      votes: [0, -1, -1, 1], veto: false
-    }
-  ],
-  events: [
-    {
-      id: 'E-1042', time: '06:12', srcCount: 3, sentiment: 'pos', topic: '宏观 / 利率',
-      title: '美国 9 月核心 PCE 同比 2.6%，低于市场预期',
-      summary: '商务部经济分析局公布 9 月核心 PCE 物价指数同比 2.6%（预期 2.7%），环比 0.2%。利率期货对 12 月降息概率的定价由 54% 升至 68%。',
-      tags: ['NDX', 'US10Y', 'DXY'], sources: ['BEA', 'Reuters', 'Bloomberg']
-    },
-    {
-      id: 'E-1043', time: '07:05', srcCount: 5, sentiment: 'pos', topic: '半导体 / AI 资本开支',
-      title: 'NVIDIA 与中东主权基金共建 5GW 数据中心，分三期落地',
-      summary: '五家来源交叉确认投资框架，首期 1.2GW 预计 2027 年投产。A1 将事件权重由 0.6 上调至 0.9，并映射至 NVDA、AVGO、VRT。',
-      tags: ['NVDA', 'AVGO', 'VRT'], sources: ['Reuters', 'FT', 'WSJ', 'CNBC', '官方新闻稿']
-    },
-    {
-      id: 'E-1044', time: '07:48', srcCount: 2, sentiment: 'neg', topic: '半导体 / 贸易政策',
-      title: '商务部就先进封装设备出口管制征求公众意见',
-      summary: '意见期 30 天，覆盖混合键合与硅通孔设备。当前对组合内标的收入影响估计低于 2%，但若扩围至量测设备则需重新评估。',
-      tags: ['AVGO', 'AMAT', 'LRCX'], sources: ['商务部公告', 'Reuters']
-    },
-    {
-      id: 'E-1045', time: '07:12', srcCount: 2, sentiment: 'neu', topic: '央行 / 欧元区',
-      title: '拉加德：通胀回落路径确认，但服务业工资仍偏强',
-      summary: 'A2 捕获欧洲议会听证会表态，措辞与 9 月会议纪要一致。A1 判定不改变 ECB 路径，维持 EUR 中性。',
-      tags: ['EUR', 'EU50'], sources: ['ECB 官网', 'Reuters'], political: true
-    },
-    {
-      id: 'E-1046', time: '05:30', srcCount: 4, sentiment: 'neg', topic: '能源',
-      title: 'OPEC+ 维持 11 月增产节奏不变，日均 13.7 万桶',
-      summary: '会议未讨论进一步减产。WTI 跌破 69 美元，能源板块相对强弱降至 12 分位。',
-      tags: ['CL', 'XLE'], sources: ['OPEC 秘书处', 'Reuters', 'Bloomberg', 'Argus']
-    },
-    {
-      id: 'E-1047', time: '08:02', srcCount: 3, sentiment: 'pos', topic: '资金流 / 港股',
-      title: '南向资金连续 11 日净流入，累计 412 亿港元',
-      summary: '主要流向互联网与高股息。0700.HK 单日净买入 28.4 亿港元，为近三个月最高。',
-      tags: ['0700.HK', 'HSI'], sources: ['港交所', 'Wind', 'AAStocks']
-    }
-  ],
-  limits: [
-    { name: '单笔名义敞口', en: 'Single position', limit: 8.0, used: 5.6, unit: '% NAV', state: 'ok' },
-    { name: '单日亏损', en: 'Daily loss', limit: 2.0, used: 0.4, unit: '% NAV', state: 'ok' },
-    { name: '组合杠杆', en: 'Gross leverage', limit: 1.5, used: 1.12, unit: 'x', state: 'warn' },
-    { name: '单行业集中度', en: 'Sector concentration', limit: 30.0, used: 31.4, unit: '%', state: 'bad' },
-    { name: '持仓相关性', en: 'Pairwise correlation', limit: 0.75, used: 0.68, unit: 'ρ', state: 'warn' },
-    { name: '事件熔断', en: 'Event circuit-breaker', limit: null, used: 0, unit: '', state: 'ok' }
-  ],
-  vetoes: [
-    { time: '12:04', agent: 'A4', action: 'reject', text: '拒绝对 AVGO 加仓至 9.2%：半导体行业敞口将达 31.4%，超过 30% 上限。', ref: 'E-1044' },
-    { time: '09:31', agent: 'A4', action: 'degrade', text: '将 TSLA 买入意图降级为「仅提示」：财报事件窗口内，波动率预估超出单笔风险预算。', ref: '—' },
-    { time: '昨日 15:22', agent: 'A4', action: 'pause', text: '单日亏损触及 1.8%（阈值 2.0%），暂停新开仓 20 分钟后自动恢复。', ref: '—' }
-  ],
-  positions: [
-    { sym: 'NVDA', name: 'NVIDIA Corp.', mkt: 'US', qty: '1,240', avg: 152.30, last: 171.06, mv: 212114, pnl: 12.31, w: 18.4 },
-    { sym: 'MSFT', name: 'Microsoft', mkt: 'US', qty: '480', avg: 402.10, last: 428.60, mv: 205728, pnl: 6.59, w: 17.8 },
-    { sym: 'AVGO', name: 'Broadcom', mkt: 'US', qty: '210', avg: 361.40, last: 389.20, mv: 81732, pnl: 7.69, w: 7.1 },
-    { sym: '0700.HK', name: '腾讯控股', mkt: 'HK', qty: '1,800', avg: 561.00, last: 596.50, mv: 137302, pnl: 6.33, w: 11.6 },
-    { sym: 'BTC/USD', name: 'Bitcoin', mkt: 'CRYPTO', qty: '0.85', avg: 96400, last: 91850, mv: 78073, pnl: -4.72, w: 6.8 },
-    { sym: '现金', name: 'Cash & equivalents', mkt: '—', qty: '—', avg: null, last: null, mv: 468000, pnl: 0, w: 40.6 }
-  ],
-  strategies: [
-    {
-      id: 'MF', name: '多因子评分轮动', en: 'Multi-factor rotation', mkt: 'US / HK 股票',
-      desc: '价值、质量、动量三因子等权打分，半月或月度换仓，持仓上限 12 只，单票不超过 8%。',
-      ann: ST.ann, mdd: ST.mdd, sharpe: ST.sharpe, turnover: 3.8, win: 58.4, n: 24, st: ST
-    },
-    {
-      id: 'TF', name: '趋势跟随', en: 'Trend following', mkt: '期货 / 外汇',
-      desc: '日线或四小时通道突破，ATR 止损，波动率目标 10%，不做日内高频。',
-      ann: STF.ann, mdd: STF.mdd, sharpe: STF.sharpe, turnover: 6.2, win: 44.1, n: 18, st: STF
-    },
-    {
-      id: 'EV', name: '事件叠加层', en: 'Event overlay', mkt: '组合层',
-      desc: '把 A1 / A2 的高置信事件作为仓位乘数或临时风险开关，而非独立开仓信号。',
-      ann: STE.ann, mdd: STE.mdd, sharpe: STE.sharpe, turnover: 0.9, win: 61.2, n: 11, st: STE
-    }
-  ],
+  /* Only authored content lives here. Every fabricated dataset that used to
+     live in this object has been removed — pages read real sources or show
+     an empty state. */
   academy: [
     {
       id: 'a1', tag: '基础', min: 6, title: '什么是中低频率策略，为什么我们不拼速度',
@@ -346,6 +230,8 @@ const D = {
    tools/export.py from A1's SQLite DB and A3's backtest output), the views
    read them instead of the fixtures. Missing files = fixtures, no error.
 */
+const TICKS = [];  /* filled only from a real source; empty means the ticker bar is hidden */
+
 const LIVE = { news: null, bt: null };
 async function loadSnapshots(force) {
   const bust = force ? ('?t=' + Date.now()) : '';

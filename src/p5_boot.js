@@ -1,7 +1,16 @@
 <script>
 /* ============================ shell render ============================ */
 function renderTicker() {
-  const html = D.ticks.map(x => {
+  const el = $('#ticker');
+  if (!el) return;
+  if (!TICKS.length) {
+    el.hidden = true;
+    document.body.classList.add('no-ticker');
+    return;
+  }
+  el.hidden = false;
+  document.body.classList.remove('no-ticker');
+  const html = TICKS.map(x => {
     const d = x.chg > 0 ? '▲' : x.chg < 0 ? '▼' : '·';
     const last = x.last >= 1000 ? nf(x.last, 0) : nf(x.last, x.last >= 100 ? 2 : 3);
     return `<div class="tick"><span class="sym">${esc(x.sym)}</span><b>${last}</b>
@@ -11,9 +20,9 @@ function renderTicker() {
 }
 
 const NAVS = [
-  { g: 'g.today', items: [['briefing', 0], ['chat', 0]] },
-  { g: 'g.research', items: [['news', 6], ['political', 0], ['strategy', 0], ['academy', 0]] },
-  { g: 'g.exec', items: [['risk', 1], ['portfolio', 0]] }
+  { g: 'g.today', items: [['overview', 0], ['briefing', 0], ['chat', 0]] },
+  { g: 'g.research', items: [['news', LIVE.news ? LIVE.news.items.length : 0], ['political', 0], ['strategy', 0], ['academy', 0]] },
+  { g: 'g.exec', items: [['risk', 0], ['portfolio', 0]] }
 ];
 function renderNav(cur) {
   $('#side').innerHTML = NAVS.map(grp => `<div class="navgroup">
@@ -31,12 +40,14 @@ function renderNav(cur) {
 function setConn(kind) {
   const el = $('#conn'); if (!el) return;
   el.className = 'conn ' + kind;
-  $('#conn-text').textContent = kind === 'ok' ? t('ui.live') : kind === 'bad' ? t('ui.offline') : t('ui.mock');
+  $('#conn-text').textContent = kind === 'ok'
+    ? t('ui.live')
+    : (isZh() ? '数据源未接入' : 'No source');
   const note = $('#conn-note');
   if (note) {
     note.textContent = kind === 'ok'
-      ? (isZh() ? '政要监控读取真实后端 · 其余模块为演示数据' : 'Political watch reads the live backend; other modules sample')
-      : (isZh() ? '未连接后端 · 界面数据为演示样例' : 'Backend offline; all data is sample');
+      ? (isZh() ? 'A2 政治监控读取真实后端 · 其余页面为真实快照或空状态' : 'A2 reads the live backend; other pages are real snapshots or empty')
+      : (isZh() ? 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据' : 'A2 offline, no snapshots imported — only real data is shown');
   }
 }
 function apiUrl(p) { return (A2.base || '') + p; }
@@ -135,12 +146,12 @@ function sendChat(q) {
 
 /* ============================ router ============================ */
 const ROUTES = {
-  briefing: viewBriefing, news: viewNews, political: viewPolitical, strategy: viewStrategy,
+  overview: viewOverview, briefing: viewBriefing, news: viewNews, political: viewPolitical, strategy: viewStrategy,
   risk: viewRisk, chat: viewChat, portfolio: viewPortfolio, academy: viewAcademy
 };
 function routeName() {
   const h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
-  return ROUTES[h] ? h : 'briefing';
+  return ROUTES[h] ? h : 'overview';
 }
 let renderGuard = 0;
 function render() {

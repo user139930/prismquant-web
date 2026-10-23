@@ -299,6 +299,10 @@ dialog::backdrop{background:rgb(27 36 48 / 32%)}
 .dlg-f{padding:0 16px 16px;display:flex;justify-content:flex-end;gap:8px}
 .err{color:var(--red);font-size:11px;margin-top:8px;min-height:14px}
 
+@media(min-width:821px){
+  body.no-ticker .side{top:58px;height:calc(100vh - 58px)}
+}
+
 @media(max-width:1180px){
   .shell{grid-template-columns:184px minmax(0,1fr)}
   .main{padding:20px 18px 36px}

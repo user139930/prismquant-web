@@ -99,105 +99,84 @@ function stateDot(s) {
 }
 
 /* ============================ briefing ============================ */
-function viewBriefing() {
-  const recs = D.recs.map((r, i) => {
-    const sideTag = r.side === 'long' ? `<span class="tag red">${isZh() ? '增持' : 'Long'}</span>`
-      : r.side === 'reduce' ? `<span class="tag green">${isZh() ? '减持' : 'Reduce'}</span>`
-        : `<span class="tag amber">${isZh() ? '持有' : 'Hold'}</span>`;
-    const votes = r.votes.map(v => `<span class="${v > 0 ? 'y' : v < 0 || r.veto ? 'n' : ''}"></span>`).join('');
-    return `<div class="rec">
-      <div class="rec-rank">${i + 1}</div>
-      <div>
-        <div class="rec-sym">${esc(r.sym)} ${sideTag} ${r.veto ? `<span class="tag outline">A4 ${isZh() ? '否决加仓' : 'veto'}</span>` : ''}</div>
-        <div class="rec-name">${esc(r.name)} · ${esc(r.mkt)} · ${esc(r.horizon)}</div>
-        <div class="rec-thesis">${esc(r.thesis)}</div>
-        <div class="mini-votes" title="A1 / A2 / A3 / A4 投票">${votes}</div>
-      </div>
-      <div class="rec-side">
-        <div class="rec-score">${r.score.toFixed(1)}</div>
-        <div class="rec-target">${esc(r.target)}</div>
-        <div style="font-size:10px;color:#a9b0bb;margin-top:2px">${isZh() ? '现价' : 'Last'} ${nf(r.last, 2)}</div>
-      </div>
-    </div>`;
-  }).join('');
 
-  const agents = D.agents.map(a => `<div class="agent-row">
-    <span class="agent-id">${a.id}</span>
-    <div><div class="agent-name">${esc(isZh() ? a.name : a.en)}</div><div class="agent-desc">${esc(isZh() ? a.desc : a.desc_en)}</div></div>
-    <div class="agent-meta"><b>${esc(a.code)}</b>${esc(a.meta)}</div>
-    ${stateDot(a.state === 'ok' ? 'ok' : 'warn')}
-  </div>`).join('');
-
-  const tl = D.events.map(e => `<div class="tl-item ${e.sentiment === 'neg' ? 'hot' : ''}">
-    <div class="tl-time">${esc(e.time)} · ${esc(e.id)}</div>
-    <div class="tl-title">${esc(e.title)}</div>
-    <div class="tl-meta"><span>${e.srcCount} ${isZh() ? '个来源' : 'sources'}</span><span class="tag ${e.sentiment === 'pos' ? 'red' : e.sentiment === 'neg' ? 'green' : ''}">${e.sentiment === 'pos' ? (isZh() ? '利多' : 'Bullish') : e.sentiment === 'neg' ? (isZh() ? '利空' : 'Bearish') : (isZh() ? '中性' : 'Neutral')}</span><span>${esc(e.topic)}</span>${e.political ? `<a href="#/political" style="color:#2f5d8a">A2 →</a>` : ''}</div>
-  </div>`).join('');
-
-  return pageHead('MORNING BRIEF / A5', t('page.briefing.t'), t('page.briefing.s'),
-    `<span class="stamp">2026-10-23 08:16 HKT · ${esc(t('brief.readtime'))}</span>
-     <button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>
-     <button class="btn sm primary" data-act="confirm">${isZh() ? '确认 3 张意图' : 'Confirm 3 intents'}</button>`)
-  + `<div class="stats">
-      <div class="stat"><div class="k">${isZh() ? '组合净值（自成立）' : 'NAV since inception'}</div><div class="v">${NAV[NAV.length - 1].toFixed(2)}<small>/ 100</small></div><div class="d up">${pct(ST.total)} · ${isZh() ? '年化' : 'ann.'} ${pct(ST.ann)}</div></div>
-      <div class="stat"><div class="k">${isZh() ? '今日盈亏' : 'P&L today'}</div><div class="v up">+0.64%</div><div class="d">${isZh() ? '基准 NDX +0.82%' : 'Benchmark NDX +0.82%'}</div></div>
-      <div class="stat"><div class="k">${isZh() ? '风控闸门' : 'Risk gates'}</div><div class="v" style="font-size:20px;color:#c8453a">1 ${isZh() ? '项超限' : 'breach'}</div><div class="d">${isZh() ? '行业集中度 31.4% / 30%' : 'Sector 31.4% vs 30%'}</div></div>
-      <div class="stat"><div class="k">${isZh() ? '待确认意图' : 'Pending intents'}</div><div class="v">3<small>/ 4</small></div><div class="d">${isZh() ? '1 张被 A4 否决' : '1 vetoed by A4'}</div></div>
-     </div>
-     <div class="split c2">
-       <div class="stack">
-         <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.morning'))}</h2><div class="right">A5 COMMANDER</div></div>
-           <div class="panel-b brief">
-             <p class="brief-lead">隔夜美股三大指数收涨，纳指 100 涨 0.82%。核心 PCE 同比 2.6% 低于预期，利率敏感的长久期资产领涨。A1 在 06:00–08:00 之间把 38 条新闻归并为 <b>6 个事件簇</b>，其中「NVIDIA 与中东主权基金共建 5GW 数据中心」被五家来源交叉确认，权重由 0.6 上调至 0.9。</p>
-             <p>A2 在 07:12 捕获拉加德在欧洲议会听证会的表态，措辞与 9 月会议纪要一致，<b>不改变 ECB 路径判断</b>。A4 于 12:04 否决了对 AVGO 的加仓意图——半导体行业敞口已达 <b>31.4%</b>，超过 30% 的硬上限。这是今天唯一需要你决策的地方。</p>
-             <div class="brief-meta"><span class="tag outline">${isZh() ? '证据链可追溯' : 'evidence chain'}</span><span>run_id R-20261023-0816</span><span>·</span><span>${isZh() ? '4 个代理参与' : '4 agents'}</span><span>·</span><span>${isZh() ? '生成耗时 41 秒' : 'generated in 41s'}</span></div>
-           </div>
-         </section>
-         <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.intents'))}</h2><div class="right">A3 → A4 · ${isZh() ? '按因子评分排序' : 'ranked by score'}</div></div>
-           <div class="panel-b tight">${recs}</div>
-         </section>
-         <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.timeline'))}</h2><div class="right">A1 / A2 · 06:00 → 08:16</div></div>
-           <div class="panel-b"><div class="tl">${tl}</div></div>
-         </section>
-       </div>
-       <div class="stack">
-         <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.agents'))}</h2><div class="right">${isZh() ? '全部正常' : 'all nominal'}</div></div>
-           <div class="panel-b tight">${agents}</div>
-         </section>
-         <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.gate'))}</h2><div class="right"><a href="#/risk" style="color:#2f5d8a;font-size:10px">${isZh() ? '查看全部' : 'All limits'} →</a></div></div>
-           <div class="panel-b">
-             ${D.limits.slice(0, 4).map(l => {
-               const r = l.limit ? (l.used / l.limit * 100) : 0;
-               return `<div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin-bottom:11px">
-                 <span style="font-size:11px;color:#67707d">${esc(isZh() ? l.name : l.en)}</span>
-                 <span class="num" style="font-size:11px;color:${r > 100 ? '#c8453a' : r > 80 ? '#a9762b' : '#7b8492'}">${l.used}${l.unit === 'x' ? 'x' : '%'} / ${l.limit ? l.limit + l.unit.replace('%', '%') : '—'}</span>
-                 <span class="bar ${r > 100 ? 'bad' : r > 80 ? 'warn' : 'ok'}" style="grid-column:1/-1"><i style="width:${Math.min(100, r).toFixed(0)}%"></i></span>
-               </div>`;
-             }).join('')}
-             <div class="notice" style="margin:12px 0 0">${isZh() ? '单行业集中度已超限：新增半导体敞口会被 A4 直接拒绝，直至敞口回落至 30% 以下。' : 'Sector concentration breached: new semiconductor exposure is rejected until it falls below 30%.'}</div>
-           </div>
-         </section>
-         <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.dissent'))}</h2><div class="right">1</div></div>
-           <div class="panel-b">
-             <div style="font-size:11px;line-height:1.95;color:#67707d">
-               <b style="color:#1b2430">A3 ${isZh() ? '主张' : 'argues'}</b>：AVGO 基本面评分 82.1，仍应加仓至 9.2%。<br>
-               <b style="color:#1b2430">A4 ${isZh() ? '否决' : 'vetoes'}</b>：行业敞口 31.4% &gt; 30%，且 E-1044（出口管制征求意见）尚未定价，两者叠加不可接受。<br>
-               <b style="color:#1b2430">A5 ${isZh() ? '裁定' : 'rules'}</b>：维持 A4 结论，把加仓排入观察队列，事件 30 天意见期结束后重评。
-             </div>
-           </div>
-         </section>
-       </div>
-     </div>` + footer();
+/* ============================ empty / overview ============================ */
+function emptyPage(eyebrow, title, sub, rows, note) {
+  const table = `<table class="t" style="border-top:1px solid var(--line)">
+      <thead><tr><th>${isZh() ? '需要什么' : 'Needed'}</th><th>${isZh() ? '谁提供' : 'Owner'}</th><th>${isZh() ? '现状' : 'Status'}</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td style="color:#3b4552">${r[0]}</td><td style="color:#7b8492">${r[1]}</td><td class="w">${r[2]}</td></tr>`).join('')}</tbody>
+    </table>`;
+  return pageHead(eyebrow, title, sub, `<span class="tag amber">${isZh() ? '暂无数据' : 'No data'}</span>`)
+    + `<section class="panel"><div class="panel-b" style="padding:0">
+        <div class="empty" style="padding:52px 32px 38px">
+          <div class="sym">◇</div>
+          <h4>${isZh() ? '这一页还没有可显示的数据' : 'Nothing to show yet'}</h4>
+          <p style="max-width:54ch;margin:10px auto 0">${note || ''}</p>
+          <div class="rule"></div>
+          <span class="micro">WAITING FOR UPSTREAM</span>
+        </div>
+        ${table}
+      </div></section>` + footer();
 }
 
-/* ============================ news ============================ */
-let NEWS_FILTER = 'all';
+function viewOverview() {
+  const ok = '<span class="tag green"><span class="dot"></span>' + (isZh() ? '已接入' : 'live') + '</span>';
+  const no = '<span class="tag amber"><span class="dot"></span>' + (isZh() ? '未接入' : 'missing') + '</span>';
+  const na = '<span class="tag outline">' + (isZh() ? '无代码' : 'no code') + '</span>';
+  const agents = [
+    ['A1', isZh() ? '新闻代理' : 'News', 'news-main · Streamlit', isZh() ? '无 HTTP 接口' : 'no HTTP API', LIVE.news ? ok : no],
+    ['A2', isZh() ? '政治监控' : 'Political', 'political-monitor · FastAPI', isZh() ? '需 PostgreSQL + 采集' : 'needs PG', A2.live ? ok : no],
+    ['A3', isZh() ? '执行代理' : 'Execution', 'ndxbots · CLI', isZh() ? '回测需五分钟数据' : 'needs 5-min bars', LIVE.bt ? ok : no],
+    ['A4', isZh() ? '风险控制' : 'Risk', '—', isZh() ? '未提供代码' : 'not provided', na],
+    ['A5', isZh() ? '指挥官' : 'Commander', '—', isZh() ? '未提供代码' : 'not provided', na]
+  ];
+  const rows = agents.map(a => `<div class="agent-row">
+      <span class="agent-id">${a[0]}</span>
+      <div><div class="agent-name">${esc(a[1])}</div><div class="agent-desc">${esc(a[2])} · ${esc(a[3])}</div></div>
+      <div class="agent-meta"></div>${a[4]}
+    </div>`).join('');
+  return pageHead('SYSTEM STATUS', isZh() ? '接入状态' : 'Integration status',
+    isZh() ? '这一版只显示真实数据。五个代理里，只有接入的服务才会出现在对应页面。' : 'Only real data is shown. A page has content only if its service is connected.',
+    `<span class="stamp">${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC</span>`)
+    + `<div class="split c2">
+      <section class="panel">
+        <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '五个代理' : 'Five agents'}</h2><div class="right">A1 – A5</div></div>
+        <div class="panel-b tight">${rows}</div>
+        <div class="panel-b" style="border-top:1px solid var(--line);font-size:11px;line-height:1.9;color:#8a7448">
+          ${isZh() ? 'A4 与 A5 目前没有可运行的代码，因此「风控闸门」「代理对话」「晨报」三页只显示空状态，不放示例内容。' : 'A4 and A5 have no runnable code yet, so risk, commander and briefing stay empty rather than showing invented content.'}
+        </div>
+      </section>
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '三个数据源' : 'Three sources'}</h2></div>
+          <div class="panel-b" style="font-size:11.5px;line-height:2;color:#67707d">
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>A1 ${isZh() ? '新闻快照' : 'news snapshot'}</span>${LIVE.news ? ok : no}</div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>A2 ${isZh() ? '政治监控 API' : 'political API'}</span>${A2.live ? ok : no}</div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span>A3 ${isZh() ? '回测快照' : 'backtest snapshot'}</span>${LIVE.bt ? ok : no}</div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '怎么让它们出现' : 'How to fill them'}</h2></div>
+          <div class="panel-b" style="font-size:11.5px;line-height:1.95;color:#67707d">
+            <p style="margin-bottom:8px"><b>A1</b> — ${isZh() ? '跑一次采集，导出 ' : 'run a collection, export '}<code>data/news.json</code></p>
+            <p style="margin-bottom:8px"><b>A2</b> — ${isZh() ? '启动 FastAPI 并跑一次采集' : 'start the FastAPI and run a collection'}</p>
+            <p><b>A3</b> — ${isZh() ? '用五分钟数据跑回测，导出 ' : 'run a backtest, export '}<code>data/backtests.json</code></p>
+          </div>
+        </section>
+      </div>
+    </div>` + footer();
+}
+
+function viewBriefing() {
+  return emptyPage('MORNING BRIEF / A5', t('page.briefing.t'), t('page.briefing.s'), [
+    [isZh() ? 'A5 指挥官产出的一份晨报（run 记录 + 四张意图）' : 'One A5 briefing run', 'AU Ka Chai (A5)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A4 风控闸门状态与当日干预记录' : 'A4 gate state and interventions', 'XU Yijia (A4)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A1/A3 的输入（事件簇、执行意图）' : 'A1/A3 inputs', 'XU Yijia / XU Jinrong', LIVE.news || LIVE.bt ? '<span class="tag green">部分就绪</span>' : '<span class="tag amber">未接入</span>']
+  ], isZh()
+    ? '晨报由 A5 指挥官聚合 A1–A4 的产出生成。A5 目前没有可运行的代码，所以这里不放任何编造的摘要或推荐。'
+    : 'The briefing is produced by A5 from A1–A4 output. A5 has no runnable code yet, so no summary is invented here.');
+}
+
 function topicBars() {
   if (LIVE.news) {
     const c = {};
@@ -238,6 +217,12 @@ function liveNewsStats(items) {
   </div>`;
 }
 function viewNews() {
+  if (!LIVE.news) return emptyPage('NEWS INTELLIGENCE / A1', t('page.news.t'), t('page.news.s'), [
+    [isZh() ? 'A1 导出的新闻快照 <code>data/news.json</code>' : 'A1 snapshot <code>data/news.json</code>', 'XU Yijia (A1)', '<span class="tag amber">未导入</span>'],
+    [isZh() ? '或 A1 的只读 HTTP 接口' : 'or a read-only endpoint', 'XU Yijia (A1)', '<span class="tag outline">不存在</span>']
+  ], isZh()
+    ? '新闻来自 A1（news-main：Streamlit + SQLite）。它没有 HTTP 接口，所以先用 <code>tools/export.py</code> 把数据库导出成 JSON，或直接跑 <code>tools/api_server.py</code>。'
+    : 'News lives in A1 (Streamlit + SQLite) with no HTTP API. Export it with <code>tools/export.py</code>, or run <code>tools/api_server.py</code>.');
   const SRC = newsItems();
   const totalSrc = SRC.reduce((a, b) => a + b.srcCount, 0);
   const list = SRC.filter(e => NEWS_FILTER === 'all' || e.sentiment === NEWS_FILTER).map((e, i) => {

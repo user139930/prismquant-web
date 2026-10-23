@@ -58,6 +58,12 @@ function verTag(v) {
 }
 
 function viewPolitical() {
+  if (!A2.live) return emptyPage('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'), [
+    [isZh() ? '运行中的 A2 后端（FastAPI，默认 :8000）' : 'A2 backend on :8000', 'XU Yijia (A2)', '<span class="tag amber">未连接</span>'],
+    [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', 'XU Yijia (A2)', '<span class="tag amber">待运行</span>']
+  ], isZh()
+    ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。启动后端后点右上角「连接设置」或按刷新即可。<br>启动方式：<code>python -X utf8 -m app</code>（在 political-monitor 目录）。'
+    : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Start the backend, then refresh.");
   const demo = !A2.live;
   const recordsCount = demo ? POL_DEMO_RECORDS.length : A2.records.length;
   return pageHead('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'),
@@ -208,13 +214,26 @@ function btSource() {
   };
 }
 function viewStrategy() {
-  const s = D.strategies.find(x => x.id === STRAT);
+  if (!LIVE.bt) return emptyPage('STRATEGY ENGINE / A3', t('page.strategy.t'), t('page.strategy.s'), [
+    [isZh() ? 'A3 导出的回测快照 <code>data/backtests.json</code>' : 'A3 snapshot <code>data/backtests.json</code>', 'XU Jinrong (A3)', '<span class="tag amber">未导入</span>'],
+    [isZh() ? '完整五分钟 K 线（回测必需）' : 'native 5-min bars', 'XU Jinrong (A3)', '<span class="tag outline">额度不足</span>']
+  ], isZh()
+    ? '回测需要原生五分钟 K 线，富途接口按账号额度计费，一次完整回测远超现有额度。请 XU Jinrong 提供 <code>equity.csv</code>，或用 <code>tools/export.py backtest</code> 导出。'
+    : 'The backtest needs native 5-minute bars and exceeds the current quote quota. Ask XU Jinrong for <code>equity.csv</code>.');
+  const live = LIVE.bt.items[0];
+  const STRATS = [{
+    id: 'MF', name: live.name || (isZh() ? '回测' : 'Backtest'), en: '', mkt: live.market || '',
+    desc: isZh() ? '由 A3 导出的真实回测结果，非示例数据。' : 'Real backtest exported from A3, not sample data.',
+    ann: (live.stats || {}).ann || 0, mdd: (live.stats || {}).mdd || 0,
+    sharpe: (live.stats || {}).sharpe || 0, turnover: 0, st: live.stats || statsOf(live.nav)
+  }];
+  const s = STRATS.find(x => x.id === STRAT) || STRATS[0];
   const bt = (STRAT === 'MF') ? btSource() : null;
   const st = bt ? bt.st : (s.st || ST);
   const series = bt ? bt.series : (SERIES[s.id] || NAV);
   const bench = (bt && bt.bench) ? bt.bench : BENCH;
   const mret = monthReturns(series, 21);
-  const rows = D.strategies.map(x => {
+  const rows = STRATS.map(x => {
     const live = (x.id === 'MF' && bt) ? bt.st : null;
     return `<tr style="cursor:pointer" data-strat="${x.id}">
       <td><div class="sym">${esc(x.name)}</div><div class="sub">${esc(x.en)}</div></td>
@@ -222,7 +241,7 @@ function viewStrategy() {
       <td class="r ${((live ? live.ann : x.ann) >= 0) ? 'up' : 'down'}">${pct(live ? live.ann : x.ann)}</td>
       <td class="r down">${(live ? live.mdd : x.mdd).toFixed(2)}%</td>
       <td class="r">${(live ? live.sharpe : x.sharpe).toFixed(2)}</td>
-      <td class="r">${x.turnover.toFixed(1)}x</td>
+      <td class="r">${x.turnover ? x.turnover.toFixed(1) + "x" : "—"}</td>
       <td class="w">${STRAT === x.id ? `<span class="tag green">${isZh() ? '当前查看' : 'viewing'}</span>` : `<span class="tag outline">${isZh() ? '查看' : 'view'}</span>`}</td>
     </tr>`;
   }).join('');

@@ -19,17 +19,15 @@ read in ten minutes and act on with three clicks.
 
 ## Screenshots
 
-| Morning briefing | Political watch (live API) |
+**Integration status (landing page)** — what each of the five agents has, and what it is missing.
+
+![Status](screenshots/00_接入狀態.png)
+
+| Political watch · live backend | News · no snapshot imported |
 |---|---|
-| ![Briefing](screenshots/01_晨報.png) | ![Political](screenshots/03_政要監控_已接後端.png) |
+| ![Political](screenshots/01_政要監控_已連線.png) | ![News](screenshots/03_新聞情報_空狀態.png) |
 
-| Strategy & backtest | Risk gates |
-|---|---|
-| ![Strategy](screenshots/04_策略與回測.png) | ![Risk](screenshots/05_風控閘門.png) |
-
-More in [`screenshots/`](screenshots) — desktop, mobile, and all three languages.
-
----
+More in [`screenshots/`](screenshots).
 
 ## Modules
 
@@ -130,66 +128,29 @@ The site is served at `https://<user>.github.io/<repo>/`.
 
 ---
 
-## How much of this is real
+## What each page shows
 
-Stated plainly, because it matters for the demo.
+This build shows **only real data**. A page with no upstream connection shows an empty
+state that names what is missing — no invented NAV, positions, limits or headlines.
 
-| Surface | Status |
-|---|---|
-| All UI logic — routing, filtering, cursor pagination, request cancellation, error states, i18n, responsive layout | **Real** |
-| Political watch — `/health`, `/api/v1/system-status`, `/api/v1/people`, `/api/v1/public-records`, `/api/v1/public-records/{id}` | **Real integration**, contract-faithful. Needs the A2 backend and its PostgreSQL running. |
-| Briefing, news, strategy, risk, portfolio, chat content | **Sample data.** Numbers are generated from a fixed seed and are internally consistent, but they are not a real backtest. Drop an exported snapshot into `data/` to make the news and strategy pages real. |
-| Sign-in | Demo only — any password works, nothing is verified. |
-
-A1 (news) is a Streamlit app and A3 (strategy) is a CLI; neither exposes an HTTP API,
-so the client cannot call them yet.
-
----
-
-## Wiring A1 / A3 (snapshot)
-
-Neither service exposes HTTP, but both can export JSON that the client reads directly:
-
-```bash
-python tools/export.py news --db "<...>/news-main/data/news.sqlite3" --report   # inspect first
-python tools/export.py news --db "<...>/news-main/data/news.sqlite3" --out data/news.json
-python tools/export.py backtest --curve "<...>/ndxbots/out/curve.csv" --out data/backtests.json
-```
-
-With the files present the news page shows an "A1 snapshot" badge and the strategy page
-shows an "A3 backtest" badge, both with a generation timestamp. Without them the client
-falls back to the fixtures and says so. `file://` cannot fetch them — serve over http(s).
-
-### Option B: local API (live, no export step)
-
-If the source files are on the machine running the demo:
-
-```bash
-python tools/api_server.py --news-db "<...>/news.sqlite3" --curve "<...>/curve.csv"
-# open http://localhost:8020/
-```
-
-It serves the client, generates `/data/news.json` and `/data/backtests.json` on every
-request from the live sources, and exposes `GET /api/v1/news/events` plus
-`GET /api/v1/strategy/backtests`. No frontend changes, no dependencies — standard
-library only.
-
-**Refresh behaviour**
-
-| Page | What the refresh button does |
-|---|---|
-| News / Strategy | Re-fetches `data/*.json` with a cache-buster. Reports "updated to …" if the file changed, "no new data" otherwise |
-| Political watch | Re-reads `/api/v1/*`; also polls every 60 s while the tab is visible |
-| Other pages | Re-render only (sample data does not change) |
-
-Refresh can only re-read data that already exists. For A1/A3 to produce new data someone
-still has to re-export and commit — that is a static-hosting limit, not a button problem.
+| Page | Source | Without data |
+|---|---|---|
+| Status | runtime state of the five agents | — |
+| Briefing | one A5 run | empty state |
+| News | `data/news.json` or `tools/api_server.py` | empty state + export command |
+| Political watch | A2 `/api/v1/*` (live) | empty state, no sample statements |
+| Strategy | `data/backtests.json` | empty state + export command |
+| Risk gates | A4 engine | always empty (A4 has no code) |
+| Commander | A5 endpoint | always empty (A5 has no code) |
+| Portfolio | simulated account | empty state |
+| Academy | four articles (authored content) | — |
 
 ## Known gaps
 
-1. **A1 and A3 have no HTTP API.** An export path exists (`tools/export.py`), but it
-   needs `news.sqlite3` or a backtest `curve.csv` from the other teams' machines first.
-   Real-time instead of a snapshot requires a read-only endpoint on the service side.
+1. **Five of the nine pages are empty right now**: A1 needs one collection export,
+   A2 needs its backend plus a collection run, A3 needs a backtest (missing 5-minute
+   bars and quote quota), A4 and A5 have no runnable code. Export paths are ready
+   (`tools/export.py`, `tools/api_server.py`).
 2. **The A2 integration was verified against a contract stub, not production.** The
    stub (`src/stub_api.py`) mirrors the documented response shapes; the real database
    has never been reachable from the development machine.
