@@ -1,0 +1,85 @@
+{
+ "generated_at": "2026-10-23T09:45:27.055943+00:00",
+ "source": "postgresql://prismquant_app@127.0.0.1:5432/prismquant_political",
+ "people_count": 2,
+ "records_count": 3,
+ "people": [
+  {
+   "person_id": "6d46c161-c1d3-58e8-8a09-bbe9118d9b9e",
+   "name_original": "Christine Lagarde",
+   "name_zh": "克里斯蒂娜·拉加德",
+   "aliases": [
+    "拉加德",
+    "拉加德女士"
+   ],
+   "country_codes": [
+    "FR"
+   ],
+   "monitoring_enabled": true
+  },
+  {
+   "person_id": "ccc1c525-60b7-55cf-b400-04680252257f",
+   "name_original": "Donald J. Trump",
+   "name_zh": "唐纳德·特朗普",
+   "aliases": [
+    "Donald Trump",
+    "特朗普",
+    "川普"
+   ],
+   "country_codes": [
+    "US"
+   ],
+   "monitoring_enabled": true
+  }
+ ],
+ "records": [
+  {
+   "record_id": "536c8ffb-a96a-49d5-939d-b544f912757a",
+   "source_id": "9efe5cc5-d4c9-54b4-aa1f-ae6816644011",
+   "source_name": "Trump’s Truth 第三方归档 RSS",
+   "publisher_name": "Trump’s Truth (Defending Democracy Together)",
+   "person_id": "ccc1c525-60b7-55cf-b400-04680252257f",
+   "title": "We will be LIVE from Iowa on Right Side Broadcasting Network (RSBN). Enjoy! President DONALD J. TRUMP",
+   "content_type": "public_statement",
+   "provenance_type": "third_party_archive",
+   "original_url": "https://truthsocial.com/@realDonaldTrump/117487219525476625",
+   "published_at": "2026-10-22T23:45:00+00:00",
+   "page_date": null,
+   "language": null,
+   "verification_status": "archive_only",
+   "body_text": "We will be LIVE from Iowa on Right Side Broadcasting Network (RSBN). Enjoy! President DONALD J. TRUMP"
+  },
+  {
+   "record_id": "7522d1ec-91a8-4444-8534-87ccc596f68a",
+   "source_id": "9efe5cc5-d4c9-54b4-aa1f-ae6816644011",
+   "source_name": "Trump’s Truth 第三方归档 RSS",
+   "publisher_name": "Trump’s Truth (Defending Democracy Together)",
+   "person_id": "ccc1c525-60b7-55cf-b400-04680252257f",
+   "title": "Getting ready to land in Iowa. Big Rally happening. Inflation and Prices coming down, FAST! Campaigning for Ashley Hinson for U.S. Senate, Zach Lahn for Governor, Brenna Bird for Attorney General, Mariannette Miller-Meeks for Iowa’s First Congressional District, Joe Mitchell for Iowa’s Second, Zach Nunn for Iowa’s Third, and Chris McGowan, for Iowa’s Fourth. See you soon. MAKE AMERICA GREAT AGAIN! President DONALD J. TRUMP",
+   "content_type": "public_statement",
+   "provenance_type": "third_party_archive",
+   "original_url": "https://truthsocial.com/@realDonaldTrump/117487124994548876",
+   "published_at": "2026-10-22T23:20:57+00:00",
+   "page_date": null,
+   "language": null,
+   "verification_status": "archive_only",
+   "body_text": "Getting ready to land in Iowa. Big Rally happening. Inflation and Prices coming down, FAST! Campaigning for Ashley Hinson for U.S. Senate, Zach Lahn for Governor, Brenna Bird for Attorney General, Mariannette Miller-Meeks for Iowa’s First Congressional District, Joe Mitchell for Iowa’s Second, Zach Nunn for Iowa’s Third, and Chris McGowan, for Iowa’s Fourth. See you soon. MAKE AMERICA GREAT AGAIN! President DONALD J. TRUMP"
+  },
+  {
+   "record_id": "08e2eb7a-93d5-4191-be98-6baae7563a6d",
+   "source_id": "22da310a-099a-58b7-9608-8f56a5fdadd8",
+   "source_name": "欧洲央行官方公开信息 RSS",
+   "publisher_name": "European Central Bank",
+   "person_id": "6d46c161-c1d3-58e8-8a09-bbe9118d9b9e",
+   "title": "IMFC Statement",
+   "content_type": "public_statement",
+   "provenance_type": "official",
+   "original_url": "https://www.ecb.europa.eu/press/key/date/2026/html/ecb.sp261017~7015ea3099.en.html",
+   "published_at": "2026-10-17T05:00:00+00:00",
+   "page_date": "2026-10-17",
+   "language": "en",
+   "verification_status": "verified_page_attribution",
+   "body_text": "Introduction\n\nThe global economy has proven surprisingly resilient in the face of high uncertainty. The conflict in the Middle East continues to expose energy markets to sharp swings. Trade tensions and protectionist measures are weighing on confidence and contributing to a reconfiguration of trade flows. The global economy has held up thanks in part to the rise of artificial intelligence, with investment in technology supporting activity and trade, particularly in economies integrated into technology value chains. Risks nonetheless remain tilted to the downside for growth and to the upside for inflation. A return to an international economic order grounded in openness, predictability and the rule of law would help trade and investment flourish.\n\nEconomic activity\n\nDespite global headwinds and the ongoing energy shock, the euro area economy has so far proved resilient. Growth was broad-based across most euro area countries and sectors in the first half of 2026. The September ECB staff projections foresee growth of 0.9% in 2026, 1.4% in 2027 and 1.5% in 2028.\n\nAs the energy shock fades over the medium term, the projections see domestic demand benefitting from a recovery in real income over the medium term, driven by lower energy inflation and a resilient labour market. Rising government spending on infrastructure and defence, complemented by investment in AI and digital technologies, should also support growth. Export growth should pick up on the back of strengthening foreign demand, also driven by AI.\n\nThe medium-term outlook is surrounded by uncertainty over how intense and long-lasting the Middle East conflict will be, and how the resulting shocks might propagate through the economy. Risks to growth are assessed to be on the downside.\n\nFiscal sustainability remains a crucial anchor for broader economic stability. It is important to maintain sound fiscal policies, including by adhering to fiscal rules, and, where debt is high, to consolidate, re-prioritise spending and enhance the efficiency and effectiveness of public finances to rebuild buffers. Governments should strive to ensure that any fiscal response to the energy shock is temporary, targeted and tailored.\n\nIn addition, policies that strengthen resilience to climate change can improve the economy’s ability to absorb climate-related shocks. These efforts should be complemented by structural policies that promote labour market participation, equip the workforce with the skills needed in an AI-driven economy and facilitate the diffusion of new technologies. Priorities include advancing the savings and investments union, improving access to risk capital and creating better conditions for innovative firms to scale up across the Single Market.\n\nInflation\n\nHeadline inflation increased to 3.8% in September, mostly reflecting a surge in energy inflation, and, to a lesser extent, an increase in food and services inflation. Core inflation increased slightly to 2.5%. The range of underlying inflation measures remained broadly stable in September and wages have so far shown no material response to the energy shock.\n\nLooking ahead, higher energy prices are expected to keep headline inflation well above target into the first half of 2027 and to gradually feed through to core and food inflation. Headline inflation is expected to decline after the first quarter as energy inflation falls, returning to around target towards the end of 2027. The risks to the inflation outlook are to the upside due, in particular, to the Middle East conflict and Russia’s unjustified war against Ukraine. A more intense or persistent energy shock could strengthen indirect and second-round effects, resulting in higher and more persistent inflation. Extreme weather could push up food prices. By contrast, a sustainable resolution of geopolitical conflicts, weaker energy pass-through or more risk-averse financial markets could lower inflation.\n\nMonetary policy\n\nThe Governing Council decided to raise the key ECB interest rates by 25 basis points in September, following an increase of the same size in June.\n\nOur interest rate decisions are based on our reaction function, which comprises three criteria: our assessment of the inflation outlook and the risks surrounding it, in light of the incoming economic and financial data, the dynamics of underlying inflation; and the strength of monetary policy transmission.\n\nThe inflation outlook points to higher inflation ahead, especially in the short term, given the latest developments in energy markets. However, we see no evidence at this stage of significant pass-through of energy prices to other prices and wages, beyond what we have already included in our projections. And while growth has been resilient, financing conditions have tightened, with long-term interest rates rising notably since our last meeting. This will slow growth and reduce pass-through by more than projected in our September exercise.\n\nTaking these three criteria together, the energy shock is too large to “look through” but a measured response remains appropriate to keep inflation in check.\n\nIn setting future policy, we will make a comprehensive assessment of the incoming data based on our reaction function. In July, the Governing Council decided on the operational features and the onboarding process for the enhanced EUREP, the Eurosystem repo facility for central banks that was announced earlier this year. The new facility supports the smooth transmission of monetary policy and reinforces the international role of the euro. More than 30 central banks have expressed interest in EUREP in the past six months.\n\nFinancial stability\n\nSources of risk and vulnerabilities for euro area financial stability remain high. Continued geopolitical tensions, fiscal challenges and uncertainties around accelerated AI adoption continue to be causes for concern. The widespread concentration of critical third-party service providers introduces single points of failure for both financial and non-financial institutions. New frontier AI models have increased cyber risks and operational vulnerabilities.\n\nEuro area banks maintain strong capital and liquidity buffers and robust profitability, together with healthy and stable asset quality. These solid fundamentals should help navigate ongoing geopolitical uncertainties and effectively support lending to the economy. Strengthened prudential regulation and supervision since the global financial crisis has helped leave euro area banks in a strong position to withstand the unfolding economic challenges.\n\nShocks could expose vulnerabilities among non-bank financial intermediaries, notably from concentrated AI-related exposures, amplifying market stress and creating spillovers across financial sectors. Banks’ exposures to non-banks and vulnerable firms could expose funding and credit vulnerabilities.\n\nStress in private credit markets has continued, with private credit funds reporting outflows and reactivating redemption gates. Private market “semi-liquid funds” that allow for redemptions are becoming more prevalent, which could lead to greater liquidity mismatches in the future, but euro area financial institutions have limited direct exposure to private credit. This means, for now, that private credit in isolation is unlikely to be a source of financial instability in the euro area.\n\nPayment systems\n\nCentral bank money must evolve to fulfil the needs of an increasingly digital economy. The Eurosystem is at the forefront of this evolution, bringing the stability and trust of central bank money to digital retail payments and tokenised finance in Europe. In the retail space we are preparing to complement cash with its digital equivalent – the digital euro – for day-to-day payments. The digital euro will further stimulate innovation and competition in retail payments, ensuring that the continued co-existence of public and private solutions underpins Europe’s strategic autonomy in payments. To lay the groundwork for a seamless and secure launch, we will run a 12-month internal pilot in the second half of 2027. Adopting the Regulation on the establishment of the digital euro by the end of 2026 is key to making this possible.\n\nIn the wholesale space, the Eurosystem is developing new capabilities to ensure that central bank money can settle transactions in the growing market of tokenised assets. Pontes – the Eurosystem’s distributed ledger technology (DLT) solution that went live on 21 September – marks the first step in implementing our strategy to enable the development of a European tokenised ecosystem. This vision will be advanced under the Appia initiative, which aims to deliver a blueprint for this ecosystem based on common standards, shared network infrastructure and European governance.\n\nInternational cooperation\n\nWe value the work of our global institutions and fora, particularly those that promote global macroeconomic and financial stability. We welcome the recent completion of the three major IMF reviews (Comprehensive Surveillance Review, Financial Sector Assessment Program Review and Review of Program Design and Conditionality), which strengthen the role of the IMF at the centre of the global financial safety net. Climate-related work should remain fully anchored in IMF operations, particularly surveillance. Multilateral efforts to help tackle global imbalances support coordination of domestic action that is required to minimise the risks from disorderly adjustment. The IMF’s analytical work on global imbalances and its improvements to the methodology for assessing external balances provide a strong basis for these efforts."
+  }
+ ]
+}

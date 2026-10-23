@@ -26,15 +26,15 @@ IVE / HKIIT，Group 1。
 
 ![接入狀態](screenshots/00_接入狀態.png)
 
-| 政要監控 · 已連線真後端 | 新聞情報 · 真實快照（24 條） |
-|---|---|
-| ![政要監控](screenshots/01_政要監控_已連線.png) | ![新聞情報](screenshots/03_新聞情報_真實快照.png) |
+| 政要監控 · 已連線真後端 | 政要監控 · 快照模式（線上版） | 新聞情報 · 真實快照（24 條） |
+|---|---|---|
+| ![政要監控](screenshots/01_政要監控_已連線.png) | ![政要快照](screenshots/02b_政要監控_快照模式.png) | ![新聞情報](screenshots/03_新聞情報_真實快照.png) |
 
 其餘在 [`screenshots/`](screenshots)：空狀態、登入頁、手機版、繁體。
 
-> 這兩張是**本機實跑**的結果，不是 GitHub Pages 上的樣子。
-> 線上版沒有 `127.0.0.1` 的後端，政要監控會是空狀態；`data/news.json` 有 commit 上去，
-> 所以新聞情報在線上也能看到那 24 條。
+> 這三張是**本機實跑**的結果。線上版（GitHub Pages）沒有 `127.0.0.1` 的後端，
+> 所以政要監控顯示的是**中間那張快照模式**（讀 `data/political.json`）；
+> 新聞情報讀 `data/news.json`。兩者都有 commit 上去，隊友開網頁就看得到真數據。
 
 ## 八個模組
 
@@ -145,6 +145,10 @@ application.mount("/app", StaticFiles(directory=PROJECT_ROOT / "web", html=True)
 這個 repo 已經開好 Pages，網址是
 **https://user139930.github.io/prismquant-web/**
 
+**線上版能直接看到 A1 新聞 + A2 政要監控的真實快照**（`data/news.json`、
+`data/political.json` 都有 commit 上去），不用跑任何後端。只有「實時」的 A2
+（最新採集）才需要本機後端。
+
 ---
 
 ## 接上 A1 / A3（快照方式）
@@ -171,6 +175,24 @@ python tools/export.py backtest --curve "C://...//ndxbots//out//curve.csv" --out
 
 放進 `data/` 後重新整理，新聞頁會顯示「A1 数据快照」並附生成時間。
 **沒有這兩個檔案時，前端顯示空狀態，不會壞。**
+
+### A2 快照（讓線上版也能看到政要監控）
+
+A2 有 HTTP 介面，但它的後端跑在你本機、GitHub Pages 連不到。所以同樣用快照：
+
+```bash
+# 用 A2 的 venv 跑（它裝了 psycopg）：
+cd <political-monitor>
+.venv\Scripts\python.exe <前端路徑>\tools\export_political.py \
+    --out <前端路徑>\data\political.json --password "<PQ_DB_PASSWORD>"
+```
+
+它從 PostgreSQL 讀出 `people` + `public_records`，寫成 `data/political.json`。
+前端開政要監控頁時會**先試後端，連不到就自動改用這個快照**，頁面標示「A2 快照」。
+所以線上版（GitHub Pages）也能看到真實的人物與發言，只是不是即時。
+
+**資料來源優先順序**：實時後端（`/api/v1/*`）→ 快照（`data/political.json`）→ 空狀態。
+三個都不在時才是空狀態，不會拿假數據墊。
 
 為什麼用快照而不是即時：GitHub Pages 是純靜態，跑不了 Python。快照讓線上版也能顯示
 真數據，代價是要手動更新一次。要即時，就得由 A1 / A3 自己開 HTTP 端點。

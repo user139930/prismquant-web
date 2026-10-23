@@ -40,9 +40,10 @@ function renderNav(cur) {
 function setConn(kind) {
   const el = $('#conn'); if (!el) return;
   el.className = 'conn ' + kind;
+  const hasAnySnap = !!(LIVE.news || LIVE.pol || LIVE.bt);
   $('#conn-text').textContent = kind === 'ok'
     ? t('ui.live')
-    : (isZh() ? '数据源未接入' : 'No source');
+    : (hasAnySnap ? (isZh() ? '快照数据' : 'Snapshot') : (isZh() ? '数据源未接入' : 'No source'));
   const note = $('#conn-note');
   if (note) {
     if (kind === 'ok') {
@@ -50,14 +51,20 @@ function setConn(kind) {
     } else {
       const hasNews = !!(LIVE.news && LIVE.news.items && LIVE.news.items.length);
       const hasBt = !!(LIVE.bt && LIVE.bt.items && LIVE.bt.items.length);
+      const hasPol = !!(LIVE.pol && LIVE.pol.records && LIVE.pol.records.length);
+      const parts = [];
+      if (A2.snapshot) parts.push(isZh() ? 'A2 快照已导入' : 'A2 snapshot imported');
+      if (hasNews) parts.push(isZh() ? 'A1 快照已导入' : 'A1 snapshot imported');
+      if (hasBt) parts.push(isZh() ? 'A3 回测已导入' : 'A3 backtest imported');
+      const summary = parts.join(' · ');
       note.textContent = isZh()
         ? (location.protocol === 'file:'
-          ? 'file:// 打开时无法连接本机 API · 请用 start-frontend.cmd'
-          : (hasNews || hasBt
-            ? 'A2 未连接 · A1 快照已导入' + (hasBt ? ' · A3 回测已导入' : '') + ' · 页面只显示真实数据'
+          ? 'file:// 打开时无法连接本机 API · 请用 start-all.cmd'
+          : (summary
+            ? summary + ' · 页面只显示真实数据'
             : 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据'))
-        : (hasNews || hasBt
-          ? 'A2 offline · A1 snapshot imported' + (hasBt ? ' · A3 backtest imported' : '') + ' — only real data is shown'
+        : (summary
+          ? summary + ' — only real data is shown'
           : 'A2 offline, no snapshots imported — only real data is shown');
     }
   }
@@ -97,6 +104,7 @@ async function probe() {
     if (routeName() === 'political') loadRecords(false);
   } catch (e) {
     A2.live = false; setConn('demo');
+    applyPoliticalSnapshot();
   } finally { A2.checked = true; A2.checking = false; }
   renderNav(routeName());
   if (routeName() === 'political') render();
@@ -479,6 +487,11 @@ function initLang() {
   startPolling();
   loadSnapshots().then(changed => {
     setConn(A2.live ? 'ok' : 'demo');
+    // If the backend isn't up but a political snapshot exists, render it.
+    if (!A2.live) {
+      const applied = applyPoliticalSnapshot();
+      if (applied && routeName() === 'political') render();
+    }
     if (changed && (routeName() === 'news' || routeName() === 'strategy')) render();
   });
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/[?&]nosw=1/.test(location.search)) {

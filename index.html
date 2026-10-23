@@ -538,7 +538,7 @@ const I18N = {
     'page.portfolio.t': '持仓与绩效', 'page.portfolio.s': '持仓、盈亏与代理贡献分解；当前为模拟撮合。',
     'page.academy.t': '学院', 'page.academy.s': '中低频率量化的基础概念，面向订阅用户。',
     'ui.refresh': '刷新', 'ui.updated': '更新于', 'ui.loading': '载入中…', 'ui.empty': '暂无内容',
-    'ui.mock': '示例数据', 'ui.live': '已连接后端', 'ui.offline': '后端未连接',
+    'ui.mock': '示例数据', 'ui.live': '已连接后端', 'ui.offline': '后端未连接', 'ui.snapshot': 'A2 快照',
     'ui.sim': '模拟撮合', 'ui.read': '阅读全文', 'ui.more': '加载更多', 'ui.search': '搜索已加载的标题',
     'ui.all': '全部', 'ui.source': '来源', 'ui.time': '时间', 'ui.status': '状态',
     'ui.settings': '连接设置', 'ui.back': '返回列表', 'ui.detail': '详情', 'ui.copy': '复制正文',
@@ -576,7 +576,7 @@ const I18N = {
     'page.portfolio.t': 'Portfolio', 'page.portfolio.s': 'Positions, P&L and agent contribution; simulated matching only.',
     'page.academy.t': 'Academy', 'page.academy.s': 'Foundations of medium-to-low-frequency quant for subscribers.',
     'ui.refresh': 'Refresh', 'ui.updated': 'Updated', 'ui.loading': 'Loading…', 'ui.empty': 'Nothing here yet',
-    'ui.mock': 'Sample data', 'ui.live': 'Backend connected', 'ui.offline': 'Backend offline',
+    'ui.mock': 'Sample data', 'ui.live': 'Backend connected', 'ui.offline': 'Backend offline', 'ui.snapshot': 'A2 snapshot',
     'ui.sim': 'Simulated', 'ui.read': 'Read', 'ui.more': 'Load more', 'ui.search': 'Search loaded titles',
     'ui.all': 'All', 'ui.source': 'Source', 'ui.time': 'Time', 'ui.status': 'Status',
     'ui.settings': 'Connection', 'ui.back': 'Back', 'ui.detail': 'Detail', 'ui.copy': 'Copy text',
@@ -752,7 +752,7 @@ const D = {
 */
 const TICKS = [];  /* filled only from a real source; empty means the ticker bar is hidden */
 
-const LIVE = { news: null, bt: null };
+const LIVE = { news: null, bt: null, pol: null };
 async function loadSnapshots(force) {
   const bust = force ? ('?t=' + Date.now()) : '';
   const grab = async p => {
@@ -762,11 +762,23 @@ async function loadSnapshots(force) {
       return await r.json();
     } catch (e) { return null; }
   };
-  const [n, b] = await Promise.all([grab('./data/news.json'), grab('./data/backtests.json')]);
+  const [n, b, p] = await Promise.all([grab('./data/news.json'), grab('./data/backtests.json'), grab('./data/political.json')]);
   let got = false;
   if (n && Array.isArray(n.items) && n.items.length) { LIVE.news = n; got = true; }
   if (b && Array.isArray(b.items) && b.items.length) { LIVE.bt = b; got = true; }
+  if (p && Array.isArray(p.records) && p.records.length) { LIVE.pol = p; got = true; }
   return got;
+}
+function applyPoliticalSnapshot() {
+  // Fill A2 with the static snapshot when the live backend is unreachable.
+  if (!LIVE.pol || A2.live) return false;
+  A2.snapshot = true;
+  A2.people = (LIVE.pol.people || []).slice();
+  A2.records = (LIVE.pol.records || []).slice();
+  A2.next = null;
+  A2.sel = null; A2.q = ''; A2.prov = ''; A2.detailId = null; A2.detail = null;
+  A2.peopleErr = null; A2.err = null;
+  return true;
 }
 </script>
 <script>
@@ -1086,7 +1098,7 @@ function viewNews() {
 <script>
 /* ============================ political (A2, live) ============================ */
 const A2 = {
-  base: '', live: false, checked: false, checking: false,
+  base: '', live: false, checked: false, checking: false, snapshot: false,
   people: [], peopleErr: null,
   sel: null,
   records: [], next: null, loading: false, err: null,
@@ -1113,11 +1125,12 @@ const POL_DEMO_BODY = {
 };
 
 function polList() {
-  const src = A2.live ? A2.people : POL_DEMO_PEOPLE;
-  return src;
+  if (A2.live) return A2.people;
+  if (A2.snapshot) return A2.people;
+  return POL_DEMO_PEOPLE;
 }
 function polRecords() {
-  let arr = A2.live ? A2.records : POL_DEMO_RECORDS;
+  let arr = A2.live ? A2.records : (A2.snapshot ? A2.records : POL_DEMO_RECORDS);
   if (A2.sel) arr = arr.filter(r => r.person_id === A2.sel);
   if (A2.prov) arr = arr.filter(r => r.provenance_type === A2.prov);
   if (A2.q.trim()) {
@@ -1143,7 +1156,7 @@ function verTag(v) {
 }
 
 function viewPolitical() {
-  if (!A2.live) {
+  if (!A2.live && !A2.snapshot) {
     const note = (isZh()
       ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。点下面的按钮，我会去探测本机后端；若后端没在跑，请双击 <code>start-all.cmd</code> 一键启动，再回来点一下。'
       : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Click the button below to probe the backend; if it isn't running, double-click <code>start-all.cmd</code> then come back.")
@@ -1161,11 +1174,14 @@ function viewPolitical() {
       [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', '<span class="tag amber">待运行</span>']
     ], note + actionHtml);
   }
-  const demo = !A2.live;
+  const demo = !A2.live && !A2.snapshot;
+  const snap = A2.snapshot && !A2.live;
   const recordsCount = demo ? POL_DEMO_RECORDS.length : A2.records.length;
+  const stamp = snap
+    ? `<span class="stamp" id="pol-stamp">${esc(t('ui.snapshot'))}</span><span class="stamp" style="color:#a9b0bb">${esc((LIVE.pol.generated_at || '').slice(0, 10))}</span>`
+    : `<span class="stamp" id="pol-stamp">${demo ? esc(t('ui.mock')) : esc(t('ui.live'))}</span>`;
   return pageHead('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'),
-    `<span class="stamp" id="pol-stamp">${demo ? esc(t('ui.mock')) : esc(t('ui.live'))}</span>
-     <button class="btn sm" data-act="refresh-pol">↻ ${esc(t('ui.refresh'))}</button>`)
+    stamp + `<button class="btn sm" data-act="refresh-pol">↻ ${esc(t('ui.refresh'))}</button>`)
     + `<div class="statebar" id="pol-sys">${sysBarHtml()}</div>
     <div class="pol">
       <aside class="panel">
@@ -1218,6 +1234,11 @@ function viewPolitical() {
 
 function sysBarHtml() {
   if (!A2.live) {
+    if (A2.snapshot) {
+      return `<span class="tag green"><span class="dot"></span>${isZh() ? '快照数据（静态导出）' : 'Snapshot data (static export)'}</span>
+      <span style="color:#a9b0bb">${isZh() ? '读自 data/political.json，非实时；要实时请双击 start-all.cmd' : 'from data/political.json, not live; double-click start-all.cmd for live'}</span>
+      <button class="btn-link" data-act="auto-connect" style="margin-left:auto">⟳ ${isZh() ? '连接后端' : 'Connect backend'}</button>`;
+    }
     return `<span class="warn">${isZh() ? '未连接后端：以下为演示记录' : 'Backend not connected: sample records'}</span>
       <span class="warn">${isZh() ? '接口地址 ' + (A2.base || 'http://127.0.0.1:8000') : 'API ' + (A2.base || 'http://127.0.0.1:8000')}</span>
       <button class="btn-link" data-act="open-settings" style="margin-left:auto">${esc(t('ui.settings'))}</button>`;
@@ -1262,16 +1283,34 @@ function recordsHtml() {
 function detailHtml() {
   if (A2.detailLoading) return `<div class="empty"><div class="sym">⋯</div><p>${esc(t('ui.loading'))}</p></div>`;
   if (A2.detailErr) return `<div class="empty"><div class="sym">!</div><h4>${esc(A2.detailErr)}</h4></div>`;
-  const d = A2.live ? A2.detail : (A2.detailId ? {
-    record_id: A2.detailId,
-    title: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).title,
-    source_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).source_name,
-    publisher_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).publisher_name,
-    published_at: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).published_at,
-    verification_status: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).verification_status,
-    original_url: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).original_url,
-    body_text: POL_DEMO_BODY[A2.detailId] || ''
-  } : null);
+  let d;
+  if (A2.live) {
+    d = A2.detail;
+  } else if (A2.snapshot && A2.detailId) {
+    const rec = A2.records.find(r => r.record_id === A2.detailId) || {};
+    d = {
+      record_id: A2.detailId,
+      title: rec.title,
+      source_name: rec.source_name,
+      publisher_name: rec.publisher_name,
+      published_at: rec.published_at,
+      page_date: rec.page_date,
+      verification_status: rec.verification_status,
+      original_url: rec.original_url,
+      body_text: rec.body_text || ''
+    };
+  } else {
+    d = A2.detailId ? {
+      record_id: A2.detailId,
+      title: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).title,
+      source_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).source_name,
+      publisher_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).publisher_name,
+      published_at: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).published_at,
+      verification_status: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).verification_status,
+      original_url: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).original_url,
+      body_text: POL_DEMO_BODY[A2.detailId] || ''
+    } : null;
+  }
   if (!d) return `<div class="empty"><div class="sym">↗</div><h4>${esc(t('pol.pick'))}</h4><p>${esc(t('pol.pickdesc'))}</p><div class="rule"></div><span class="micro">CONTEXT MATTERS</span></div>`;
   const u = safeUrl(d.original_url);
   return `<div class="detail-b">
@@ -1582,9 +1621,10 @@ function renderNav(cur) {
 function setConn(kind) {
   const el = $('#conn'); if (!el) return;
   el.className = 'conn ' + kind;
+  const hasAnySnap = !!(LIVE.news || LIVE.pol || LIVE.bt);
   $('#conn-text').textContent = kind === 'ok'
     ? t('ui.live')
-    : (isZh() ? '数据源未接入' : 'No source');
+    : (hasAnySnap ? (isZh() ? '快照数据' : 'Snapshot') : (isZh() ? '数据源未接入' : 'No source'));
   const note = $('#conn-note');
   if (note) {
     if (kind === 'ok') {
@@ -1592,14 +1632,20 @@ function setConn(kind) {
     } else {
       const hasNews = !!(LIVE.news && LIVE.news.items && LIVE.news.items.length);
       const hasBt = !!(LIVE.bt && LIVE.bt.items && LIVE.bt.items.length);
+      const hasPol = !!(LIVE.pol && LIVE.pol.records && LIVE.pol.records.length);
+      const parts = [];
+      if (A2.snapshot) parts.push(isZh() ? 'A2 快照已导入' : 'A2 snapshot imported');
+      if (hasNews) parts.push(isZh() ? 'A1 快照已导入' : 'A1 snapshot imported');
+      if (hasBt) parts.push(isZh() ? 'A3 回测已导入' : 'A3 backtest imported');
+      const summary = parts.join(' · ');
       note.textContent = isZh()
         ? (location.protocol === 'file:'
-          ? 'file:// 打开时无法连接本机 API · 请用 start-frontend.cmd'
-          : (hasNews || hasBt
-            ? 'A2 未连接 · A1 快照已导入' + (hasBt ? ' · A3 回测已导入' : '') + ' · 页面只显示真实数据'
+          ? 'file:// 打开时无法连接本机 API · 请用 start-all.cmd'
+          : (summary
+            ? summary + ' · 页面只显示真实数据'
             : 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据'))
-        : (hasNews || hasBt
-          ? 'A2 offline · A1 snapshot imported' + (hasBt ? ' · A3 backtest imported' : '') + ' — only real data is shown'
+        : (summary
+          ? summary + ' — only real data is shown'
           : 'A2 offline, no snapshots imported — only real data is shown');
     }
   }
@@ -1639,6 +1685,7 @@ async function probe() {
     if (routeName() === 'political') loadRecords(false);
   } catch (e) {
     A2.live = false; setConn('demo');
+    applyPoliticalSnapshot();
   } finally { A2.checked = true; A2.checking = false; }
   renderNav(routeName());
   if (routeName() === 'political') render();
@@ -2021,6 +2068,11 @@ function initLang() {
   startPolling();
   loadSnapshots().then(changed => {
     setConn(A2.live ? 'ok' : 'demo');
+    // If the backend isn't up but a political snapshot exists, render it.
+    if (!A2.live) {
+      const applied = applyPoliticalSnapshot();
+      if (applied && routeName() === 'political') render();
+    }
     if (changed && (routeName() === 'news' || routeName() === 'strategy')) render();
   });
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/[?&]nosw=1/.test(location.search)) {

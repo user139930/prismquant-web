@@ -18,7 +18,7 @@ const I18N = {
     'page.portfolio.t': '持仓与绩效', 'page.portfolio.s': '持仓、盈亏与代理贡献分解；当前为模拟撮合。',
     'page.academy.t': '学院', 'page.academy.s': '中低频率量化的基础概念，面向订阅用户。',
     'ui.refresh': '刷新', 'ui.updated': '更新于', 'ui.loading': '载入中…', 'ui.empty': '暂无内容',
-    'ui.mock': '示例数据', 'ui.live': '已连接后端', 'ui.offline': '后端未连接',
+    'ui.mock': '示例数据', 'ui.live': '已连接后端', 'ui.offline': '后端未连接', 'ui.snapshot': 'A2 快照',
     'ui.sim': '模拟撮合', 'ui.read': '阅读全文', 'ui.more': '加载更多', 'ui.search': '搜索已加载的标题',
     'ui.all': '全部', 'ui.source': '来源', 'ui.time': '时间', 'ui.status': '状态',
     'ui.settings': '连接设置', 'ui.back': '返回列表', 'ui.detail': '详情', 'ui.copy': '复制正文',
@@ -56,7 +56,7 @@ const I18N = {
     'page.portfolio.t': 'Portfolio', 'page.portfolio.s': 'Positions, P&L and agent contribution; simulated matching only.',
     'page.academy.t': 'Academy', 'page.academy.s': 'Foundations of medium-to-low-frequency quant for subscribers.',
     'ui.refresh': 'Refresh', 'ui.updated': 'Updated', 'ui.loading': 'Loading…', 'ui.empty': 'Nothing here yet',
-    'ui.mock': 'Sample data', 'ui.live': 'Backend connected', 'ui.offline': 'Backend offline',
+    'ui.mock': 'Sample data', 'ui.live': 'Backend connected', 'ui.offline': 'Backend offline', 'ui.snapshot': 'A2 snapshot',
     'ui.sim': 'Simulated', 'ui.read': 'Read', 'ui.more': 'Load more', 'ui.search': 'Search loaded titles',
     'ui.all': 'All', 'ui.source': 'Source', 'ui.time': 'Time', 'ui.status': 'Status',
     'ui.settings': 'Connection', 'ui.back': 'Back', 'ui.detail': 'Detail', 'ui.copy': 'Copy text',
@@ -232,7 +232,7 @@ const D = {
 */
 const TICKS = [];  /* filled only from a real source; empty means the ticker bar is hidden */
 
-const LIVE = { news: null, bt: null };
+const LIVE = { news: null, bt: null, pol: null };
 async function loadSnapshots(force) {
   const bust = force ? ('?t=' + Date.now()) : '';
   const grab = async p => {
@@ -242,10 +242,22 @@ async function loadSnapshots(force) {
       return await r.json();
     } catch (e) { return null; }
   };
-  const [n, b] = await Promise.all([grab('./data/news.json'), grab('./data/backtests.json')]);
+  const [n, b, p] = await Promise.all([grab('./data/news.json'), grab('./data/backtests.json'), grab('./data/political.json')]);
   let got = false;
   if (n && Array.isArray(n.items) && n.items.length) { LIVE.news = n; got = true; }
   if (b && Array.isArray(b.items) && b.items.length) { LIVE.bt = b; got = true; }
+  if (p && Array.isArray(p.records) && p.records.length) { LIVE.pol = p; got = true; }
   return got;
+}
+function applyPoliticalSnapshot() {
+  // Fill A2 with the static snapshot when the live backend is unreachable.
+  if (!LIVE.pol || A2.live) return false;
+  A2.snapshot = true;
+  A2.people = (LIVE.pol.people || []).slice();
+  A2.records = (LIVE.pol.records || []).slice();
+  A2.next = null;
+  A2.sel = null; A2.q = ''; A2.prov = ''; A2.detailId = null; A2.detail = null;
+  A2.peopleErr = null; A2.err = null;
+  return true;
 }
 </script>

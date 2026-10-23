@@ -1,7 +1,7 @@
 <script>
 /* ============================ political (A2, live) ============================ */
 const A2 = {
-  base: '', live: false, checked: false, checking: false,
+  base: '', live: false, checked: false, checking: false, snapshot: false,
   people: [], peopleErr: null,
   sel: null,
   records: [], next: null, loading: false, err: null,
@@ -28,11 +28,12 @@ const POL_DEMO_BODY = {
 };
 
 function polList() {
-  const src = A2.live ? A2.people : POL_DEMO_PEOPLE;
-  return src;
+  if (A2.live) return A2.people;
+  if (A2.snapshot) return A2.people;
+  return POL_DEMO_PEOPLE;
 }
 function polRecords() {
-  let arr = A2.live ? A2.records : POL_DEMO_RECORDS;
+  let arr = A2.live ? A2.records : (A2.snapshot ? A2.records : POL_DEMO_RECORDS);
   if (A2.sel) arr = arr.filter(r => r.person_id === A2.sel);
   if (A2.prov) arr = arr.filter(r => r.provenance_type === A2.prov);
   if (A2.q.trim()) {
@@ -58,7 +59,7 @@ function verTag(v) {
 }
 
 function viewPolitical() {
-  if (!A2.live) {
+  if (!A2.live && !A2.snapshot) {
     const note = (isZh()
       ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。点下面的按钮，我会去探测本机后端；若后端没在跑，请双击 <code>start-all.cmd</code> 一键启动，再回来点一下。'
       : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Click the button below to probe the backend; if it isn't running, double-click <code>start-all.cmd</code> then come back.")
@@ -76,11 +77,14 @@ function viewPolitical() {
       [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', '<span class="tag amber">待运行</span>']
     ], note + actionHtml);
   }
-  const demo = !A2.live;
+  const demo = !A2.live && !A2.snapshot;
+  const snap = A2.snapshot && !A2.live;
   const recordsCount = demo ? POL_DEMO_RECORDS.length : A2.records.length;
+  const stamp = snap
+    ? `<span class="stamp" id="pol-stamp">${esc(t('ui.snapshot'))}</span><span class="stamp" style="color:#a9b0bb">${esc((LIVE.pol.generated_at || '').slice(0, 10))}</span>`
+    : `<span class="stamp" id="pol-stamp">${demo ? esc(t('ui.mock')) : esc(t('ui.live'))}</span>`;
   return pageHead('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'),
-    `<span class="stamp" id="pol-stamp">${demo ? esc(t('ui.mock')) : esc(t('ui.live'))}</span>
-     <button class="btn sm" data-act="refresh-pol">↻ ${esc(t('ui.refresh'))}</button>`)
+    stamp + `<button class="btn sm" data-act="refresh-pol">↻ ${esc(t('ui.refresh'))}</button>`)
     + `<div class="statebar" id="pol-sys">${sysBarHtml()}</div>
     <div class="pol">
       <aside class="panel">
@@ -133,6 +137,11 @@ function viewPolitical() {
 
 function sysBarHtml() {
   if (!A2.live) {
+    if (A2.snapshot) {
+      return `<span class="tag green"><span class="dot"></span>${isZh() ? '快照数据（静态导出）' : 'Snapshot data (static export)'}</span>
+      <span style="color:#a9b0bb">${isZh() ? '读自 data/political.json，非实时；要实时请双击 start-all.cmd' : 'from data/political.json, not live; double-click start-all.cmd for live'}</span>
+      <button class="btn-link" data-act="auto-connect" style="margin-left:auto">⟳ ${isZh() ? '连接后端' : 'Connect backend'}</button>`;
+    }
     return `<span class="warn">${isZh() ? '未连接后端：以下为演示记录' : 'Backend not connected: sample records'}</span>
       <span class="warn">${isZh() ? '接口地址 ' + (A2.base || 'http://127.0.0.1:8000') : 'API ' + (A2.base || 'http://127.0.0.1:8000')}</span>
       <button class="btn-link" data-act="open-settings" style="margin-left:auto">${esc(t('ui.settings'))}</button>`;
@@ -177,16 +186,34 @@ function recordsHtml() {
 function detailHtml() {
   if (A2.detailLoading) return `<div class="empty"><div class="sym">⋯</div><p>${esc(t('ui.loading'))}</p></div>`;
   if (A2.detailErr) return `<div class="empty"><div class="sym">!</div><h4>${esc(A2.detailErr)}</h4></div>`;
-  const d = A2.live ? A2.detail : (A2.detailId ? {
-    record_id: A2.detailId,
-    title: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).title,
-    source_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).source_name,
-    publisher_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).publisher_name,
-    published_at: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).published_at,
-    verification_status: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).verification_status,
-    original_url: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).original_url,
-    body_text: POL_DEMO_BODY[A2.detailId] || ''
-  } : null);
+  let d;
+  if (A2.live) {
+    d = A2.detail;
+  } else if (A2.snapshot && A2.detailId) {
+    const rec = A2.records.find(r => r.record_id === A2.detailId) || {};
+    d = {
+      record_id: A2.detailId,
+      title: rec.title,
+      source_name: rec.source_name,
+      publisher_name: rec.publisher_name,
+      published_at: rec.published_at,
+      page_date: rec.page_date,
+      verification_status: rec.verification_status,
+      original_url: rec.original_url,
+      body_text: rec.body_text || ''
+    };
+  } else {
+    d = A2.detailId ? {
+      record_id: A2.detailId,
+      title: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).title,
+      source_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).source_name,
+      publisher_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).publisher_name,
+      published_at: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).published_at,
+      verification_status: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).verification_status,
+      original_url: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).original_url,
+      body_text: POL_DEMO_BODY[A2.detailId] || ''
+    } : null;
+  }
   if (!d) return `<div class="empty"><div class="sym">↗</div><h4>${esc(t('pol.pick'))}</h4><p>${esc(t('pol.pickdesc'))}</p><div class="rule"></div><span class="micro">CONTEXT MATTERS</span></div>`;
   const u = safeUrl(d.original_url);
   return `<div class="detail-b">

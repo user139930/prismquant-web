@@ -6,15 +6,18 @@
 | 檔案 | 來源 | 產生方式 |
 |---|---|---|
 | `news.json` | A1 `news-main/data/news.sqlite3` | `python tools/export.py news --db "<path>/news.sqlite3" --limit 24 --per-source 2 --out data/news.json` |
+| `political.json` | A2 `political-monitor` 的 PostgreSQL | 用 A2 venv 跑 `tools/export_political.py --out data/political.json --password "<PQ_DB_PASSWORD>"` |
 | `backtests.json` | A3 `ndxbots` 回測輸出的 `curve.csv` | `python tools/export.py backtest --curve "<path>/curve.csv" --out data/backtests.json` |
 
-前端啟動時會 `fetch('./data/news.json')` 與 `./data/backtests.json`；
+前端啟動時會 `fetch('./data/news.json')`、`./data/political.json`、`./data/backtests.json`；
 讀到就當真數據顯示，讀不到就顯示空狀態。
 
-目前 `news.json` 裡面是 2026-10-23 實跑採集的 **24 條真實新聞，來自 16 個來源**
-（披露易、CNBC ×3、香港電台、BBC、FT、ECB、HKEX、EIA、UBS CIO、State Street、
-Apollo、金管局、FINRA、Apple Newsroom）。全部 `analyzed: false`，
-所以情緒一律中性、主題空白——LLM 分析需要 API key，沒跑就不假造。
+目前 `news.json` 裡面是 2026-10-23 實跑採集的 **24 條真實新聞，來自 16 個來源**。
+`political.json` 是 **2 位人物（拉加德、特朗普）+ 3 條真實公開記錄**（拉加德 IMFC 聲明、
+特朗普兩條 Truth Social）。全部都是真實數據，不是假造。
+
+政要監控頁的資料優先順序：**實時後端 → political.json 快照 → 空狀態**。
+所以 GitHub Pages 上（連不到本機後端）會自動讀快照，標示「A2 快照」。
 
 **限制**
 
