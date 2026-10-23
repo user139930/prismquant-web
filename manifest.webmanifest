@@ -1,0 +1,45 @@
+{
+  "name": "PrismQuant · 棱镜量化",
+  "short_name": "PrismQuant",
+  "description": "多市场中低频量化与多智能体决策平台。顾问模式，不下单。",
+  "lang": "zh-Hans",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1b2430",
+  "categories": [
+    "finance",
+    "business",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "晨报",
+      "url": "./index.html#/briefing"
+    },
+    {
+      "name": "风控闸门",
+      "url": "./index.html#/risk"
+    },
+    {
+      "name": "政要监控",
+      "url": "./index.html#/political"
+    }
+  ]
+}

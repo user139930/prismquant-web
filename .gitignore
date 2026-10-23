@@ -1,0 +1,6 @@
+src/shots/
+__pycache__/
+*.pyc
+qa_*.html
+.DS_Store
+Thumbs.db

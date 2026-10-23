@@ -1,0 +1,144 @@
+<body>
+<a class="sr-only" href="#view">跳至主要内容</a>
+
+<header class="topbar">
+  <a class="brand" href="#/briefing" aria-label="PrismQuant">
+    <span class="brand-mark">P<i>Q</i></span>
+    <span>
+      <span class="brand-name">PRISMQUANT</span>
+      <span class="brand-sub" id="brand-sub">棱镜量化 · 多市场研究终端</span>
+    </span>
+  </a>
+  <div class="top-mid">
+    <span class="conn demo" id="conn"><span id="conn-text">示例数据</span></span>
+    <span class="micro" id="conn-note" style="letter-spacing:.4px;text-transform:none">未连接后端 · 界面数据为演示样例</span>
+  </div>
+  <div class="top-right">
+    <span class="plan" id="plan-badge">PROFESSIONAL · 试用</span>
+    <div class="seg" role="group" aria-label="语言 / Language">
+      <button id="lang-zh" class="on" aria-pressed="true" title="简体中文">简</button>
+      <button id="lang-hant" aria-pressed="false" title="繁體中文">繁</button>
+      <button id="lang-en" aria-pressed="false" title="English">EN</button>
+    </div>
+    <button class="ghost" id="btn-settings" title="后端连接设置" aria-label="后端连接设置">⚙</button>
+    <button class="ghost" id="btn-account" title="账户与订阅" aria-label="账户与订阅">◔</button>
+  </div>
+</header>
+
+<div class="ticker" id="ticker" aria-label="市场快照"></div>
+
+<div class="shell">
+  <aside class="side" id="side" aria-label="主导航"></aside>
+  <main class="main" id="view" tabindex="-1"></main>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<dialog id="dlg-settings">
+  <form method="dialog" id="settings-form">
+    <div class="dlg-h">
+      <h3>后端连接</h3>
+      <button class="ghost" value="cancel" aria-label="关闭" style="width:24px;height:24px;border:0">×</button>
+    </div>
+    <div class="dlg-b">
+      <p>「政要监控」模块直接读取组员提供的 FastAPI 后端。留空则使用当前网站同源地址；以 <code>file://</code> 打开时默认尝试 <code>http://127.0.0.1:8000</code>。</p>
+      <label for="api-base">后端地址</label>
+      <input id="api-base" type="url" placeholder="http://127.0.0.1:8000">
+      <p style="margin-top:10px">跨端口访问需在后端 <code>.env</code> 设置 <code>PQ_CORS_ORIGINS</code> 包含本页来源，然后重启 API。地址只保存在本浏览器，不含任何数据库凭据。</p>
+      <div class="err" id="settings-err"></div>
+    </div>
+    <div class="dlg-f">
+      <button class="btn" value="cancel">取消</button>
+      <button class="btn primary" value="save" id="settings-save">保存并重连</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-account">
+  <form method="dialog">
+    <div class="dlg-h">
+      <h3>账户与订阅</h3>
+      <button class="ghost" value="cancel" aria-label="关闭" style="width:24px;height:24px;border:0">×</button>
+    </div>
+    <div class="dlg-b" id="account-body"></div>
+    <div class="dlg-f"><button class="btn" value="cancel">关闭</button></div>
+  </form>
+</dialog>
+
+<div id="boot" class="boot">
+  <div class="boot-lang" role="group" aria-label="语言 / Language">
+    <button type="button" data-lang="zh" class="on">简</button>
+    <button type="button" data-lang="hant">繁</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+  <div class="boot-inner">
+    <div class="boot-left">
+      <div class="boot-brand"><span class="brand-mark" style="width:36px;height:36px;font-size:18px">P<i>Q</i></span><b>PRISMQUANT</b></div>
+      <h1 class="boot-title" data-boot="title">把隔夜的信息，<br>收敛成三张可以执行的意图。</h1>
+      <p class="boot-sub" data-boot="sub">多市场中低频量化 · 五代理决策链路 · 顾问模式，不下单。</p>
+      <div class="boot-grid">
+        <div class="boot-col">
+          <div class="micro">01 / RESEARCH TO EXECUTION</div>
+          <p data-boot="f1">新闻、政要公开表态、因子评分与风险闸门收敛成一份十分钟可读完的晨报。</p>
+        </div>
+        <div class="boot-col">
+          <div class="micro">02 / RISK VETO</div>
+          <p data-boot="f2">执行代理的每一张意图都必须通过 A4；否决必须留下规则编号与触发值。</p>
+        </div>
+        <div class="boot-col">
+          <div class="micro">03 / AUDITABLE AGENTS</div>
+          <p data-boot="f3">每条建议都带证据链与来源，禁止没有依据的「必涨」结论。</p>
+        </div>
+      </div>
+      <div class="boot-foot">
+        <span>ITE4116M · Group 1</span>
+        <span>LIU Tsz Ho · XU Yijia · AU Ka Chai · XU Jinrong</span>
+      </div>
+    </div>
+    <form class="boot-card" id="login-form">
+      <div class="boot-card-h">
+        <div class="micro">SECURE ACCESS</div>
+        <h2 data-boot="cardTitle">登录终端</h2>
+      </div>
+      <label><span data-boot="email">工作邮箱</span><input type="email" value="250139930@stu.vtc.edu.hk" autocomplete="username"></label>
+      <label><span data-boot="pwd">密码</span><input type="password" value="prismquant" autocomplete="current-password"></label>
+      <div class="boot-row"><label class="chk"><input type="checkbox" checked> <span data-boot="remember">记住本设备</span></label><span data-boot="forgot">忘记密码</span></div>
+      <button class="btn primary boot-submit" type="submit" data-boot="enter">进入终端</button>
+      <div class="boot-note" data-boot="note">课程演示账户 · 任意密码可进入 · 当前为顾问模式（不下单）</div>
+      <div class="boot-divider"><span data-boot="or">或</span></div>
+      <button class="btn boot-alt" type="button" id="boot-demo" data-boot="guest">以访客身份查看演示</button>
+    </form>
+  </div>
+</div>
+
+<style>
+.boot{position:fixed;inset:0;z-index:80;background:var(--paper);display:grid;place-items:center;padding:32px;overflow:auto}
+.boot-lang{position:absolute;top:24px;right:28px;display:flex;border:1px solid var(--line2);border-radius:5px;overflow:hidden;background:#fff;box-shadow:0 1px 2px #00000008}
+.boot-lang button{border:0;background:#fff;font-size:11px;padding:5px 12px;color:var(--muted);letter-spacing:.5px}
+.boot-lang button+button{border-left:1px solid var(--line)}
+.boot-lang button.on{background:var(--ink);color:#fff}
+.boot-inner{width:min(1040px,100%);display:grid;grid-template-columns:minmax(0,1.12fr) minmax(320px,.88fr);gap:56px;align-items:center}
+.boot-brand{display:flex;align-items:center;gap:11px;font-size:12px;letter-spacing:2.4px;font-weight:700}
+.boot-title{font:400 30px/1.5 var(--serif);letter-spacing:.3px;margin:26px 0 12px;color:var(--ink)}
+.boot-sub{font-size:12px;color:var(--muted);line-height:1.9;max-width:40ch}
+.boot-grid{display:grid;grid-template-columns:1fr;gap:0;margin:28px 0 26px;border-top:1px solid var(--line)}
+.boot-col{padding:13px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:184px minmax(0,1fr);gap:16px;align-items:baseline}
+.boot-col .micro{font-size:10px;letter-spacing:1.2px;line-height:1.6}
+.boot-col p{font-size:11px;line-height:1.8;color:#7b8492;margin:0}
+.boot-foot{display:flex;justify-content:space-between;gap:14px;font-size:10px;letter-spacing:.9px;color:#b7bdc7;flex-wrap:wrap}
+.boot-card{border:1px solid var(--line);border-radius:8px;padding:26px;background:#fff}
+.boot-card-h{margin-bottom:20px}
+.boot-card-h h2{font-size:17px;font-weight:650;margin-top:7px;letter-spacing:.3px}
+.boot-card label{display:block;font-size:11px;color:var(--muted);margin-bottom:13px}
+.boot-card input[type=email],.boot-card input[type=password]{width:100%;margin-top:6px;border:1px solid var(--line2);border-radius:4px;padding:9px 10px;font-size:12px;outline:0;background:#fff}
+.boot-card input[type=email]:focus,.boot-card input[type=password]:focus{border-color:#aab3bf;box-shadow:0 0 0 3px #1b24300a}
+.boot-row{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--muted);margin:-3px 0 16px}
+.boot-row .chk{display:flex;align-items:center;gap:6px;margin:0;font-size:10px;color:var(--muted)}
+.boot-row input{width:auto;margin:0;accent-color:#1b2430}
+.boot-submit{width:100%;justify-content:center;padding:10px;font-size:12px}
+.boot-note{font-size:10px;color:var(--faint);margin-top:12px;line-height:1.7;text-align:center}
+.boot-divider{position:relative;text-align:center;margin:18px 0 14px;border-top:1px solid var(--line)}
+.boot-divider span{position:relative;top:-9px;background:#fff;padding:0 10px;font-size:10px;letter-spacing:1px;color:#b7bdc7}
+.boot-alt{width:100%;justify-content:center;padding:9px;font-size:11px;color:#5a6472}
+@media(max-width:860px){.boot-inner{grid-template-columns:minmax(0,1fr);gap:26px}.boot-title{font-size:22px}.boot-col{grid-template-columns:1fr;gap:4px}.boot-foot{display:none}}
+</style>

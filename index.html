@@ -1,0 +1,2119 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="PrismQuant 棱镜量化 · 多市场中低频量化与多智能体决策平台">
+<title>PrismQuant · 棱镜量化</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b2430'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3Ctext x='24' y='15' font-family='Georgia,serif' font-size='11' font-weight='700' fill='%23eb9a86' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#1b2430">
+<link rel="apple-touch-icon" href="./icon.svg">
+<style>
+:root{
+  --ink:#1b2430;--ink2:#3b4552;--muted:#8a929f;--faint:#a9b0bb;
+  --line:#e6e9ee;--line2:#d7dce3;--paper:#fff;--bg:#f4f5f7;--surface:#fafbfc;
+  --red:#c8453a;--red-soft:#fbeeec;--red-line:#f0d3ce;
+  --green:#1f7a63;--green-soft:#ecf5f2;
+  --amber:#a9762b;--amber-soft:#fbf4e8;
+  --blue:#2f5d8a;--blue-soft:#eef3f9;
+  --violet:#5b4b8a;--violet-soft:#f1eff7;
+  --serif:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
+  --sans:"Segoe UI",-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font:13px/1.6 var(--sans);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p,figure{margin:0}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.num{font-family:var(--serif);font-variant-numeric:tabular-nums}
+.up{color:var(--red)}
+.down{color:var(--green)}
+.muted{color:var(--muted)}
+.micro{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint)}
+
+.topbar{position:sticky;top:0;z-index:40;height:58px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:24px;padding:0 20px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:0 0 auto}
+.brand-mark{width:30px;height:30px;border-radius:7px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;gap:0;font:700 15px var(--serif);letter-spacing:0}
+.brand-mark i{font-style:normal;font-size:.74em;color:#eb9a86;transform:translateY(-3px);margin-left:1px}
+.brand-name{font-size:12px;font-weight:700;letter-spacing:2.2px;line-height:1}
+.brand-sub{display:block;font-size:10px;letter-spacing:1.1px;color:var(--muted);font-weight:400;margin-top:4px}
+.top-mid{display:flex;align-items:center;gap:8px;margin-left:6px;flex:1 1 auto;min-width:0}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.4px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);white-space:nowrap}
+.conn:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.conn.ok{color:var(--green);border-color:#cfe3dd;background:#f4faf7}
+.conn.demo{color:var(--amber);border-color:#ecdfc8;background:#fdf9f1}
+.conn.bad{color:var(--red);border-color:var(--red-line);background:var(--red-soft)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.seg button{border:0;background:#fff;font-size:11px;padding:5px 10px;color:var(--muted);letter-spacing:.5px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:#fff}
+.ghost{width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:#fff;display:grid;place-items:center;font-size:13px;color:#6c7787}
+.ghost:hover{border-color:var(--line2);color:var(--ink)}
+.plan{font-size:10px;letter-spacing:1.2px;color:var(--muted);border:1px solid var(--line);padding:3px 8px;border-radius:3px}
+
+.ticker{display:flex;align-items:stretch;overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);height:34px;scrollbar-width:none}
+.ticker::-webkit-scrollbar{display:none}
+.tick{display:flex;align-items:center;gap:8px;padding:0 15px;border-right:1px solid var(--line);font-size:11px;white-space:nowrap;letter-spacing:.3px}
+.tick .sym{color:#5f6b7a}
+.tick b{font:400 12px var(--serif);font-variant-numeric:tabular-nums}
+.tick .chg{font:400 10.5px var(--serif);font-variant-numeric:tabular-nums}
+.tick-end{margin-left:auto;display:flex;align-items:center;padding:0 15px;font-size:10px;letter-spacing:1px;color:var(--faint);white-space:nowrap;border-left:1px solid var(--line)}
+
+.shell{display:grid;grid-template-columns:211px minmax(0,1fr);align-items:start}
+.side{background:#fff;border-right:1px solid var(--line);padding:16px 0 26px;position:sticky;top:92px;height:calc(100vh - 92px);overflow-y:auto}
+.navgroup{padding:0 11px;margin-bottom:16px}
+.navgroup-t{font-size:10px;letter-spacing:1.5px;color:var(--faint);padding:0 10px;margin-bottom:6px;text-transform:uppercase}
+.navlink{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:5px;font-size:12px;color:#5a6472;text-decoration:none;position:relative;line-height:1.4}
+.navlink:hover{background:#f7f8fa;color:var(--ink)}
+.navlink.active{background:#f3f5f7;color:var(--ink);font-weight:600}
+.navlink.active:before{content:"";position:absolute;left:-11px;top:6px;bottom:6px;width:2px;background:var(--red);border-radius:2px}
+.navlink .ico{width:15px;text-align:center;font-size:12px;color:#9aa3b0;flex:0 0 auto}
+.navlink.active .ico{color:var(--red)}
+.navlink .cnt{margin-left:auto;font:400 10px var(--serif);color:var(--faint);background:#f3f5f7;border-radius:999px;padding:0 5px;min-width:16px;text-align:center}
+.navlink.active .cnt{background:#fff;color:var(--muted)}
+.side-foot{margin-top:26px;padding:14px 16px 0;border-top:1px solid var(--line);color:var(--faint);font-size:10px;line-height:1.8}
+.side-foot b{display:block;font-size:10px;letter-spacing:1.6px;color:#b7bdc7;font-weight:400;margin-bottom:6px}
+
+.main{padding:24px 28px 44px;width:100%;max-width:1480px;min-width:0}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px}
+.eyebrow{font-size:10px;letter-spacing:2.1px;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.page-title{font-size:22px;font-weight:650;letter-spacing:.4px;line-height:1.35}
+.page-sub{font-size:12px;color:var(--muted);margin-top:5px;max-width:62ch}
+.head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.head-actions .stamp{font-size:10px;color:var(--faint);white-space:nowrap}
+
+.btn{font-size:11px;padding:6px 11px;border-radius:4px;border:1px solid var(--line2);background:#fff;color:var(--ink);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{border-color:#b9c0ca}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#243040}
+.btn.danger{border-color:var(--red-line);color:var(--red);background:#fff}
+.btn.danger:hover{background:var(--red-soft)}
+.btn.sm{font-size:11px;padding:4px 8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-link{border:0;background:none;color:var(--blue);font-size:11px;padding:0;text-decoration:underline;text-underline-offset:2px}
+
+.panel{background:#fff;border:1px solid var(--line);border-radius:6px;min-width:0;overflow:hidden}
+.panel+.panel{margin-top:14px}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 18px;border-bottom:1px solid var(--line);min-height:48px}
+.panel-h h2{font-size:13px;font-weight:650;display:flex;align-items:center;gap:8px;letter-spacing:.2px}
+.accent{width:3px;height:11px;background:var(--red);flex:0 0 auto}
+.panel-h .right{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--faint);white-space:nowrap}
+.panel-b{padding:18px}
+.panel-b.tight{padding:0}
+.legend{display:flex;align-items:center;gap:14px;font-size:10px;color:var(--muted);flex-wrap:wrap}
+.legend i{width:14px;height:2px;display:inline-block;margin-right:5px;vertical-align:2px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.stat{padding:15px 18px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat .k{font-size:11px;letter-spacing:.5px;color:var(--muted)}
+.stat .v{font:400 26px/1.25 var(--serif);font-variant-numeric:tabular-nums;margin-top:3px}
+.stat .v small{font-size:11px;color:var(--muted);margin-left:3px}
+.stat .d{font-size:10px;color:var(--faint);margin-top:1px}
+
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+.t th{font-size:10px;letter-spacing:.7px;color:var(--muted);font-weight:500;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface);text-transform:uppercase}
+.t td{padding:11px 14px;border-bottom:1px solid #f1f3f6;vertical-align:middle}
+.t tbody tr:last-child td{border-bottom:0}
+.t tbody tr:hover{background:#fbfcfd}
+.t .r{text-align:right;font-family:var(--serif);font-variant-numeric:tabular-nums;white-space:nowrap}
+.t .w{white-space:nowrap}
+.t .sym{font-weight:600;letter-spacing:.2px}
+.t .sub{font-size:10px;color:var(--faint);margin-top:2px}
+
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;letter-spacing:.3px;padding:2px 6px;border-radius:3px;background:#f2f4f7;color:#5f6b7a;white-space:nowrap;line-height:1.5}
+.tag.red{background:var(--red-soft);color:var(--red)}
+.tag.green{background:var(--green-soft);color:var(--green)}
+.tag.amber{background:var(--amber-soft);color:var(--amber)}
+.tag.blue{background:var(--blue-soft);color:var(--blue)}
+.tag.violet{background:var(--violet-soft);color:var(--violet)}
+.tag.outline{background:#fff;border:1px solid var(--line2);color:var(--muted)}
+.dot{width:5px;height:5px;border-radius:50%;display:inline-block;background:currentColor}
+
+.bar{height:4px;background:#edeff3;border-radius:3px;overflow:hidden;min-width:52px;display:block}
+.bar i{display:block;height:100%;background:var(--ink);border-radius:3px}
+.bar.warn i{background:var(--amber)}
+.bar.bad i{background:var(--red)}
+.bar.ok i{background:var(--green)}
+
+.split{display:grid;gap:14px}
+.split.c2{grid-template-columns:minmax(0,1.42fr) minmax(300px,1fr)}
+.split.c2e{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.split.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.split.side{grid-template-columns:minmax(0,1fr) 268px}
+
+.stack{display:flex;flex-direction:column;gap:14px}
+
+.brief p{font-size:15px;line-height:1.95;color:var(--ink2);max-width:40em;text-align:justify;text-justify:inter-ideograph}
+.brief p+p{margin-top:14px}
+.brief b{font-weight:600;color:var(--ink)}
+.brief-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--faint)}
+.byline{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--faint);letter-spacing:.3px}
+
+.rec{display:grid;grid-template-columns:auto 1fr auto;gap:13px;padding:14px 16px;border-bottom:1px solid #f1f3f6;align-items:start}
+.rec:last-child{border-bottom:0}
+.rec-rank{font:400 11px var(--serif);color:var(--faint);border:1px solid var(--line);width:24px;height:24px;display:grid;place-items:center;border-radius:50%;margin-top:1px}
+.rec-sym{font-size:13px;font-weight:650;letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+.rec-name{font-size:11px;color:var(--faint);margin-top:1px}
+.rec-thesis{font-size:12px;color:#67707d;line-height:1.75;margin-top:6px}
+.rec-thesis em{font-style:normal;color:var(--ink2);border-bottom:1px dotted var(--line2)}
+.rec-side{text-align:right;min-width:104px}
+.rec-score{font:400 19px/1.2 var(--serif);font-variant-numeric:tabular-nums}
+.rec-target{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--serif)}
+.mini-votes{display:flex;gap:3px;margin-top:6px;justify-content:flex-end}
+.mini-votes span{width:16px;height:3px;background:#e8ebf0;border-radius:2px}
+.mini-votes span.y{background:var(--green)}
+.mini-votes span.n{background:var(--red)}
+
+.tl{position:relative;padding-left:18px}
+.tl:before{content:"";position:absolute;left:4px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl-item{position:relative;padding:0 0 15px}
+.tl-item:last-child{padding-bottom:0}
+.tl-item:before{content:"";position:absolute;left:-17.5px;top:6px;width:6px;height:6px;border-radius:50%;background:#fff;border:1px solid #c3cad4}
+.tl-item.hot:before{border-color:var(--red);background:var(--red)}
+.tl-time{font:400 10px var(--serif);color:var(--faint);letter-spacing:.3px}
+.tl-title{font-size:12px;line-height:1.65;margin-top:2px}
+.tl-meta{font-size:10px;color:var(--faint);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.agent-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f1f3f6}
+.agent-row:last-child{border-bottom:0}
+.agent-id{font:400 10px var(--serif);letter-spacing:.5px;color:#fff;background:var(--ink);border-radius:3px;padding:2px 5px;flex:0 0 auto}
+.agent-name{font-size:12px;font-weight:600}
+.agent-desc{font-size:11px;color:var(--faint);margin-top:1px}
+.agent-meta{margin-left:auto;margin-right:12px;text-align:right;font-size:10px;color:var(--faint);white-space:nowrap;min-width:52px}
+.agent-meta b{display:block;font:400 10.5px var(--serif);color:var(--muted)}
+
+.news-item{display:block;padding:13px 16px;border-bottom:1px solid #f1f3f6;text-decoration:none;color:inherit;position:relative}
+.news-item:last-child{border-bottom:0}
+.news-item>summary{list-style:none;cursor:pointer;display:block}
+.news-item>summary::-webkit-details-marker{display:none}
+.news-item>summary::marker{content:''}
+.news-item:hover{background:#fbfcfd}
+.news-item:hover .news-title{color:var(--red)}
+.news-top{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--faint);flex-wrap:wrap}
+.news-title{font-size:13px;line-height:1.7;margin-top:5px;font-weight:550;transition:color .12s;padding-right:22px}
+.news-sum{font-size:12px;color:#78818e;line-height:1.75;margin-top:4px}
+.news-foot{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;padding-right:22px}
+.news-item .chev{position:absolute;right:15px;top:15px;color:#b3bcc7;font-size:11px;transition:transform .15s}
+.news-item[open] .chev{transform:rotate(180deg)}
+
+.filterbar{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--surface)}
+.search{flex:1 1 190px;display:flex;align-items:center;gap:6px;border:1px solid var(--line2);background:#fff;border-radius:4px;padding:0 9px;height:29px;min-width:140px}
+.search input{border:0;outline:0;background:none;width:100%;font-size:11px;padding:0}
+.search span{color:var(--faint);font-size:12px}
+select.sel{border:1px solid var(--line2);background:#fff;border-radius:4px;height:29px;font-size:11px;padding:0 6px;color:#5a6472;max-width:150px}
+.chip{border:1px solid var(--line2);background:#fff;border-radius:999px;font-size:11.5px;padding:3px 9px;color:#6c7787}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.person{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:5px;padding:7px 8px;margin-bottom:2px;min-width:0}
+.person:hover{background:#f7f8fa}
+.person.on{background:#f7f4f2;border-color:#efe3dd}
+.pav{width:26px;height:26px;border-radius:50%;background:#e9edf3;color:#54637a;display:grid;place-items:center;font:600 10px var(--serif);flex:0 0 auto}
+.pav.all{background:#fbeee9;color:var(--red);font-size:15px;font-weight:400}
+.pbody{display:block;min-width:0;flex:1 1 auto;padding:1px 0}
+.person .pname{display:block;font-size:12px;font-weight:600;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person .psub{display:block;font-size:10px;color:var(--faint);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person .pc{margin-left:auto;color:#ccd2da;font-size:12px;flex:0 0 auto}
+
+.rec-list{max-height:calc(100vh - 300px);overflow:auto}
+.rec-item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #f1f3f6;background:#fff;padding:12px 14px;position:relative}
+.rec-item:hover{background:#fbfcfd}
+.rec-item.on{background:#fdf7f5;box-shadow:inset 2px 0 0 var(--red)}
+.rec-item h4{font-size:11px;line-height:1.65;font-weight:600;padding-right:14px}
+.rec-item .mm{font-size:10px;color:var(--faint);margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.detail{position:sticky;top:96px;max-height:calc(100vh - 112px);overflow:auto;min-height:420px}
+.detail-b{padding:18px}
+.detail h2{font-size:15px;line-height:1.6;font-weight:650;margin:10px 0 8px;overflow-wrap:anywhere}
+.body-text{font:15px/1.95 var(--serif);white-space:pre-wrap;overflow-wrap:anywhere;color:#3b4552;max-width:38em}
+.notice{font-size:11px;line-height:1.85;color:#8a7448;background:#fbf8f1;border-left:2px solid #ddc9a5;padding:7px 10px;margin:12px 0}
+.empty{padding:44px 26px;text-align:center;color:#a2a9b4}
+.empty .sym{display:inline-grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:12px;font-size:18px;color:#aab2be;margin-bottom:14px}
+.empty h4{font-size:12px;color:#7d8795;font-weight:500;margin-bottom:6px}
+.empty p{font-size:11px;line-height:1.9}
+.rule{height:1px;width:36px;background:var(--line);margin:16px auto}
+
+.chat-wrap{display:grid;grid-template-columns:minmax(0,1fr) 262px;gap:14px;align-items:start}
+.msgs{max-height:calc(100vh - 330px);min-height:250px;overflow:auto;padding:18px 18px 6px}
+.msg{display:flex;gap:10px;margin-bottom:18px}
+.mav{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font:600 9.5px var(--serif);flex:0 0 auto;margin-top:1px}
+.mav.a5{background:var(--ink);color:#fff}
+.mav.me{background:#eef1f5;color:#65717f}
+.mbody{min-width:0;flex:1}
+.mhead{display:flex;align-items:baseline;gap:7px;font-size:10px;color:var(--faint);margin-bottom:4px}
+.mhead b{font-size:11px;color:var(--ink2);font-weight:650}
+.mtext{font-size:12px;line-height:1.95;color:#3d4753}
+.mtext p{margin:0 0 8px}
+.mtext p:last-child{margin-bottom:0}
+.mtext ul{margin:6px 0;padding-left:16px}
+.mtext li{margin-bottom:4px}
+.evidence{margin-top:9px;border:1px solid var(--line);border-radius:5px;background:var(--surface)}
+.evidence summary{cursor:pointer;font-size:10px;color:#6c7787;padding:7px 10px;list-style:none;display:flex;align-items:center;gap:6px}
+.evidence summary::-webkit-details-marker{display:none}
+.evidence summary:before{content:"▸";font-size:10px;color:#aab2be}
+.evidence[open] summary:before{content:"▾"}
+.evidence .ev-b{border-top:1px solid var(--line);padding:9px 10px;font:11px/1.8 var(--mono);color:#69727f;white-space:pre-wrap;overflow-x:auto}
+.quick{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+.composer{display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line)}
+.composer input{flex:1;border:1px solid var(--line2);border-radius:4px;padding:8px 10px;font-size:12px;outline:0}
+.composer input:focus{border-color:#b9c0ca}
+
+.heat{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.heat i{border-radius:2px;display:block;height:34px;cursor:default}
+.hmonths{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:4px}
+.hmonths span{font:400 8px var(--serif);color:var(--faint);text-align:center}
+.hlegend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--faint);margin-top:10px;white-space:nowrap;flex-wrap:nowrap}
+.hlegend span{width:9px;height:8px;border-radius:1px;display:inline-block;flex:0 0 auto}
+.hlegend em{font-style:normal;margin-left:4px}
+
+.acad-card{display:flex;flex-direction:column;padding:18px;text-decoration:none;color:inherit;border:1px solid var(--line);background:#fff;border-radius:6px;min-height:0}
+.acad-card:hover{border-color:var(--line2);box-shadow:0 1px 0 #00000008}
+.acad-card h3{font-size:13px;line-height:1.6;font-weight:650;margin:9px 0 6px}
+.acad-card p{font-size:11px;color:#7b8492;line-height:1.8}
+.acad-card .meta{margin-top:auto;padding-top:12px;font-size:10px;color:var(--faint);display:flex;gap:8px;align-items:center}
+
+.statebar{display:flex;flex-wrap:wrap;gap:6px 18px;padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:5px;font-size:10px;color:var(--green);margin-bottom:14px}
+.statebar .warn{color:var(--amber)}
+.statebar .bad{color:var(--red)}
+.statebar span:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:1px}
+
+.footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:14px;font-size:10px;color:var(--faint);flex-wrap:wrap}
+.footer b{font-weight:400;letter-spacing:1.2px}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#2a3442;color:#fff;font-size:11px;padding:9px 16px;border-radius:5px;z-index:60;box-shadow:0 6px 24px #0002}
+dialog{border:1px solid var(--line);border-radius:8px;padding:0;width:min(430px,calc(100% - 28px));color:var(--ink);font-family:var(--sans)}
+dialog::backdrop{background:rgb(27 36 48 / 32%)}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.dlg-h h3{font-size:13px;font-weight:650}
+.dlg-b{padding:16px}
+.dlg-b p{font-size:11px;color:#7b8492;line-height:1.85;margin:0 0 12px}
+.dlg-b label{display:block;font-size:11px;margin-bottom:6px}
+.dlg-b input{width:100%;border:1px solid var(--line2);border-radius:4px;padding:8px 10px;font-size:12px}
+.dlg-f{padding:0 16px 16px;display:flex;justify-content:flex-end;gap:8px}
+.err{color:var(--red);font-size:11px;margin-top:8px;min-height:14px}
+
+@media(max-width:1180px){
+  .shell{grid-template-columns:184px minmax(0,1fr)}
+  .main{padding:20px 18px 36px}
+  .split.c2,.split.side{grid-template-columns:minmax(0,1fr)}
+  .detail{position:static;max-height:none;min-height:0}
+  .rec-list{max-height:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--line)}
+  .chat-wrap{grid-template-columns:minmax(0,1fr)}
+  .split.c3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:820px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px 8px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  .navgroup{display:flex;gap:4px;padding:0;margin:0}
+  .navgroup-t,.side-foot{display:none}
+  .navlink{padding:6px 10px;font-size:11px;white-space:nowrap}
+  .navlink.active:before{display:none}
+  .navlink .cnt{display:none}
+  .navlink .ico{display:none}
+  .topbar{gap:8px;padding:0 12px;height:52px}
+  .brand{gap:7px}
+  .brand-mark{width:25px;height:25px;border-radius:6px;font-size:13px}
+  .brand-name{font-size:10px;letter-spacing:1.1px}
+  .brand-sub{display:none}
+  .seg button{padding:4px 7px;font-size:10px}
+  .ghost{width:26px;height:26px;font-size:12px;border-radius:5px}
+  .top-right{gap:7px}
+  .top-mid{display:none}
+  .plan{display:none}
+  .ticker{height:31px}
+  .main{padding:16px 12px 30px}
+  .page-head{flex-direction:column;align-items:flex-start;gap:10px}
+  .head-actions{justify-content:flex-start;gap:7px}
+  .head-actions .stamp{display:none}
+  .page-title{font-size:18px}
+  .split.c3,.split.c2e{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat{padding:11px 12px}
+  .stat .v{font-size:20px}
+  .tick{padding:0 10px}
+  .rec{grid-template-columns:auto 1fr}
+  .rec-side{grid-column:1/-1;text-align:left;display:flex;align-items:center;gap:10px;margin-top:6px}
+  .mini-votes{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+<a class="sr-only" href="#view">跳至主要内容</a>
+
+<header class="topbar">
+  <a class="brand" href="#/briefing" aria-label="PrismQuant">
+    <span class="brand-mark">P<i>Q</i></span>
+    <span>
+      <span class="brand-name">PRISMQUANT</span>
+      <span class="brand-sub" id="brand-sub">棱镜量化 · 多市场研究终端</span>
+    </span>
+  </a>
+  <div class="top-mid">
+    <span class="conn demo" id="conn"><span id="conn-text">示例数据</span></span>
+    <span class="micro" id="conn-note" style="letter-spacing:.4px;text-transform:none">未连接后端 · 界面数据为演示样例</span>
+  </div>
+  <div class="top-right">
+    <span class="plan" id="plan-badge">PROFESSIONAL · 试用</span>
+    <div class="seg" role="group" aria-label="语言 / Language">
+      <button id="lang-zh" class="on" aria-pressed="true" title="简体中文">简</button>
+      <button id="lang-hant" aria-pressed="false" title="繁體中文">繁</button>
+      <button id="lang-en" aria-pressed="false" title="English">EN</button>
+    </div>
+    <button class="ghost" id="btn-settings" title="后端连接设置" aria-label="后端连接设置">⚙</button>
+    <button class="ghost" id="btn-account" title="账户与订阅" aria-label="账户与订阅">◔</button>
+  </div>
+</header>
+
+<div class="ticker" id="ticker" aria-label="市场快照"></div>
+
+<div class="shell">
+  <aside class="side" id="side" aria-label="主导航"></aside>
+  <main class="main" id="view" tabindex="-1"></main>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<dialog id="dlg-settings">
+  <form method="dialog" id="settings-form">
+    <div class="dlg-h">
+      <h3>后端连接</h3>
+      <button class="ghost" value="cancel" aria-label="关闭" style="width:24px;height:24px;border:0">×</button>
+    </div>
+    <div class="dlg-b">
+      <p>「政要监控」模块直接读取组员提供的 FastAPI 后端。留空则使用当前网站同源地址；以 <code>file://</code> 打开时默认尝试 <code>http://127.0.0.1:8000</code>。</p>
+      <label for="api-base">后端地址</label>
+      <input id="api-base" type="url" placeholder="http://127.0.0.1:8000">
+      <p style="margin-top:10px">跨端口访问需在后端 <code>.env</code> 设置 <code>PQ_CORS_ORIGINS</code> 包含本页来源，然后重启 API。地址只保存在本浏览器，不含任何数据库凭据。</p>
+      <div class="err" id="settings-err"></div>
+    </div>
+    <div class="dlg-f">
+      <button class="btn" value="cancel">取消</button>
+      <button class="btn primary" value="save" id="settings-save">保存并重连</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-account">
+  <form method="dialog">
+    <div class="dlg-h">
+      <h3>账户与订阅</h3>
+      <button class="ghost" value="cancel" aria-label="关闭" style="width:24px;height:24px;border:0">×</button>
+    </div>
+    <div class="dlg-b" id="account-body"></div>
+    <div class="dlg-f"><button class="btn" value="cancel">关闭</button></div>
+  </form>
+</dialog>
+
+<div id="boot" class="boot">
+  <div class="boot-lang" role="group" aria-label="语言 / Language">
+    <button type="button" data-lang="zh" class="on">简</button>
+    <button type="button" data-lang="hant">繁</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+  <div class="boot-inner">
+    <div class="boot-left">
+      <div class="boot-brand"><span class="brand-mark" style="width:36px;height:36px;font-size:18px">P<i>Q</i></span><b>PRISMQUANT</b></div>
+      <h1 class="boot-title" data-boot="title">把隔夜的信息，<br>收敛成三张可以执行的意图。</h1>
+      <p class="boot-sub" data-boot="sub">多市场中低频量化 · 五代理决策链路 · 顾问模式，不下单。</p>
+      <div class="boot-grid">
+        <div class="boot-col">
+          <div class="micro">01 / RESEARCH TO EXECUTION</div>
+          <p data-boot="f1">新闻、政要公开表态、因子评分与风险闸门收敛成一份十分钟可读完的晨报。</p>
+        </div>
+        <div class="boot-col">
+          <div class="micro">02 / RISK VETO</div>
+          <p data-boot="f2">执行代理的每一张意图都必须通过 A4；否决必须留下规则编号与触发值。</p>
+        </div>
+        <div class="boot-col">
+          <div class="micro">03 / AUDITABLE AGENTS</div>
+          <p data-boot="f3">每条建议都带证据链与来源，禁止没有依据的「必涨」结论。</p>
+        </div>
+      </div>
+      <div class="boot-foot">
+        <span>ITE4116M · Group 1</span>
+        <span>LIU Tsz Ho · XU Yijia · AU Ka Chai · XU Jinrong</span>
+      </div>
+    </div>
+    <form class="boot-card" id="login-form">
+      <div class="boot-card-h">
+        <div class="micro">SECURE ACCESS</div>
+        <h2 data-boot="cardTitle">登录终端</h2>
+      </div>
+      <label><span data-boot="email">工作邮箱</span><input type="email" value="250139930@stu.vtc.edu.hk" autocomplete="username"></label>
+      <label><span data-boot="pwd">密码</span><input type="password" value="prismquant" autocomplete="current-password"></label>
+      <div class="boot-row"><label class="chk"><input type="checkbox" checked> <span data-boot="remember">记住本设备</span></label><span data-boot="forgot">忘记密码</span></div>
+      <button class="btn primary boot-submit" type="submit" data-boot="enter">进入终端</button>
+      <div class="boot-note" data-boot="note">课程演示账户 · 任意密码可进入 · 当前为顾问模式（不下单）</div>
+      <div class="boot-divider"><span data-boot="or">或</span></div>
+      <button class="btn boot-alt" type="button" id="boot-demo" data-boot="guest">以访客身份查看演示</button>
+    </form>
+  </div>
+</div>
+
+<style>
+.boot{position:fixed;inset:0;z-index:80;background:var(--paper);display:grid;place-items:center;padding:32px;overflow:auto}
+.boot-lang{position:absolute;top:24px;right:28px;display:flex;border:1px solid var(--line2);border-radius:5px;overflow:hidden;background:#fff;box-shadow:0 1px 2px #00000008}
+.boot-lang button{border:0;background:#fff;font-size:11px;padding:5px 12px;color:var(--muted);letter-spacing:.5px}
+.boot-lang button+button{border-left:1px solid var(--line)}
+.boot-lang button.on{background:var(--ink);color:#fff}
+.boot-inner{width:min(1040px,100%);display:grid;grid-template-columns:minmax(0,1.12fr) minmax(320px,.88fr);gap:56px;align-items:center}
+.boot-brand{display:flex;align-items:center;gap:11px;font-size:12px;letter-spacing:2.4px;font-weight:700}
+.boot-title{font:400 30px/1.5 var(--serif);letter-spacing:.3px;margin:26px 0 12px;color:var(--ink)}
+.boot-sub{font-size:12px;color:var(--muted);line-height:1.9;max-width:40ch}
+.boot-grid{display:grid;grid-template-columns:1fr;gap:0;margin:28px 0 26px;border-top:1px solid var(--line)}
+.boot-col{padding:13px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:184px minmax(0,1fr);gap:16px;align-items:baseline}
+.boot-col .micro{font-size:10px;letter-spacing:1.2px;line-height:1.6}
+.boot-col p{font-size:11px;line-height:1.8;color:#7b8492;margin:0}
+.boot-foot{display:flex;justify-content:space-between;gap:14px;font-size:10px;letter-spacing:.9px;color:#b7bdc7;flex-wrap:wrap}
+.boot-card{border:1px solid var(--line);border-radius:8px;padding:26px;background:#fff}
+.boot-card-h{margin-bottom:20px}
+.boot-card-h h2{font-size:17px;font-weight:650;margin-top:7px;letter-spacing:.3px}
+.boot-card label{display:block;font-size:11px;color:var(--muted);margin-bottom:13px}
+.boot-card input[type=email],.boot-card input[type=password]{width:100%;margin-top:6px;border:1px solid var(--line2);border-radius:4px;padding:9px 10px;font-size:12px;outline:0;background:#fff}
+.boot-card input[type=email]:focus,.boot-card input[type=password]:focus{border-color:#aab3bf;box-shadow:0 0 0 3px #1b24300a}
+.boot-row{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--muted);margin:-3px 0 16px}
+.boot-row .chk{display:flex;align-items:center;gap:6px;margin:0;font-size:10px;color:var(--muted)}
+.boot-row input{width:auto;margin:0;accent-color:#1b2430}
+.boot-submit{width:100%;justify-content:center;padding:10px;font-size:12px}
+.boot-note{font-size:10px;color:var(--faint);margin-top:12px;line-height:1.7;text-align:center}
+.boot-divider{position:relative;text-align:center;margin:18px 0 14px;border-top:1px solid var(--line)}
+.boot-divider span{position:relative;top:-9px;background:#fff;padding:0 10px;font-size:10px;letter-spacing:1px;color:#b7bdc7}
+.boot-alt{width:100%;justify-content:center;padding:9px;font-size:11px;color:#5a6472}
+@media(max-width:860px){.boot-inner{grid-template-columns:minmax(0,1fr);gap:26px}.boot-title{font-size:22px}.boot-col{grid-template-columns:1fr;gap:4px}.boot-foot{display:none}}
+</style>
+<script>
+/* Simplified -> Traditional (Hong Kong) lookup, generated with OpenCC s2hk. */
+const HANT_CHAR = {"万":"萬","与":"與","专":"專","业":"業","东":"東","两":"兩","个":"個","临":"臨","为":"為","么":"麼","义":"義","书":"書","买":"買","于":"於","亏":"虧","云":"雲","产":"產","亿":"億","仅":"僅","从":"從","仓":"倉","们":"們","价":"價","众":"眾","优":"優","会":"會","伟":"偉","体":"體","余":"餘","债":"債","关":"關","内":"內","写":"寫","决":"決","净":"淨","准":"準","减":"減","凭":"憑","击":"擊","则":"則","刚":"剛","别":"別","剧":"劇","务":"務","动":"動","势":"勢","区":"區","单":"單","占":"佔","历":"歷","压":"壓","参":"參","发":"發","变":"變","叠":"疊","号":"號","后":"後","吗":"嗎","听":"聽","启":"啓","员":"員","响":"響","围":"圍","国":"國","图":"圖","场":"場","块":"塊","墙":"牆","处":"處","备":"備","复":"復","够":"夠","学":"學","实":"實","对":"對","导":"導","将":"將","尝":"嘗","层":"層","属":"屬","峰":"峯","币":"幣","带":"帶","干":"幹","并":"並","库":"庫","应":"應","开":"開","弃":"棄","张":"張","强":"強","归":"歸","当":"當","录":"錄","征":"徵","径":"徑","态":"態","总":"總","恒":"恆","恶":"惡","愿":"願","托":"託","执":"執","扩":"擴","护":"護","报":"報","拟":"擬","拥":"擁","拦":"攔","择":"擇","挂":"掛","挡":"擋","挥":"揮","损":"損","换":"換","据":"據","撑":"撐","敛":"斂","数":"數","断":"斷","无":"無","时":"時","显":"顯","暂":"暫","机":"機","权":"權","杠":"槓","条":"條","来":"來","极":"極","构":"構","标":"標","样":"樣","档":"檔","检":"檢","棱":"稜","欧":"歐","毕":"畢","汇":"匯","没":"沒","测":"測","济":"濟","浏":"瀏","涨":"漲","点":"點","热":"熱","状":"狀","独":"獨","献":"獻","环":"環","现":"現","电":"電","监":"監","盖":"蓋","盘":"盤","码":"碼","础":"礎","确":"確","稳":"穩","笔":"筆","筛":"篩","签":"籤","类":"類","紧":"緊","约":"約","级":"級","纪":"紀","纯":"純","纳":"納","线":"線","组":"組","终":"終","经":"經","结":"結","绕":"繞","给":"給","绝":"絕","统":"統","绩":"績","绪":"緒","续":"續","维":"維","编":"編","缩":"縮","网":"網","联":"聯","胀":"脹","脑":"腦","腾":"騰","节":"節","获":"獲","装":"裝","见":"見","观":"觀","规":"規","览":"覽","触":"觸","计":"計","订":"訂","认":"認","讨":"討","让":"讓","议":"議","讯":"訊","记":"記","论":"論","讽":"諷","设":"設","访":"訪","证":"證","评":"評","识":"識","词":"詞","试":"試","话":"話","询":"詢","该":"該","详":"詳","语":"語","说":"説","请":"請","读":"讀","课":"課","调":"調","负":"負","贡":"貢","财":"財","败":"敗","账":"賬","货":"貨","质":"質","贴":"貼","贸":"貿","费":"費","资":"資","赖":"賴","赛":"賽","趋":"趨","踪":"蹤","转":"轉","轮":"輪","载":"載","较":"較","输":"輸","辞":"辭","边":"邊","达":"達","过":"過","运":"運","还":"還","这":"這","进":"進","连":"連","迟":"遲","适":"適","选":"選","邮":"郵","采":"採","释":"釋","里":"裡","钟":"鍾","链":"鏈","错":"錯","键":"鍵","镜":"鏡","长":"長","门":"門","闭":"閉","问":"問","间":"間","闸":"閘","闻":"聞","阅":"閲","阈":"閾","队":"隊","阶":"階","际":"際","险":"險","随":"隨","隐":"隱","页":"頁","顶":"頂","项":"項","顺":"順","须":"須","顾":"顧","预":"預","领":"領","频":"頻","题":"題","额":"額","风":"風","验":"驗","黄":"黃"};
+const HANT_PHRASE = {"好贴合历":"好貼合曆","杠杆与现":"槓桿與現","闻归并为":"聞歸併為","组合杠杆":"組合槓桿","周期通常":"週期通常","分钟阅读":"分鐘閲讀","某只标的":"某隻標的","恒生指数":"恒生指數","情绪分布":"情緒分佈","分钟可读":"分鐘可讀","份十分钟":"份十分鐘","仓周期通":"倉週期通","今日干预":"今日干預","复制正文":"複製正文","新闻归并":"新聞歸併","持仓周期":"持倉週期","别强的时":"彆強的時","发布时间":"發佈時間","贴合历史":"貼合曆史","风控干预":"風控干預","十分钟可":"十分鐘可","低杠杆与":"低槓桿與","分钟后自":"分鐘後自","析局公布":"析局公佈","复制正":"複製正","恒生指":"恒生指","杠杆与":"槓桿與","十分钟":"十分鐘","别强的":"彆強的","日干预":"日干預","贴合历":"貼合曆","局公布":"局公佈","绪分布":"緒分佈","周期通":"週期通","低杠杆":"低槓桿","某只标":"某隻標","归并为":"歸併為","控干预":"控干預","今日干":"今日干","合历史":"合曆史","闻归并":"聞歸併","分钟前":"分鐘前","合杠杆":"合槓桿","发布时":"發佈時","已复制":"已複製","分钟阅":"分鐘閲","分钟可":"分鐘可","分钟后":"分鐘後","仓周期":"倉週期","发布":"發佈","干预":"干預","复制":"複製","公布":"公佈","归并":"歸併","分钟":"分鐘","周期":"週期","分布":"分佈","并为":"併為","别强":"彆強","日干":"日干","合历":"合曆","某只":"某隻","杠杆":"槓桿","恒生":"恒生"};
+
+function toHant(s) {
+  if (!s || typeof s !== 'string') return s;
+  var out = '', i = 0, n = s.length;
+  while (i < n) {
+    var hit = null;
+    for (var L = 4; L >= 2; L--) {
+      if (i + L <= n) {
+        var k = s.substr(i, L);
+        if (HANT_PHRASE[k]) { hit = [k, HANT_PHRASE[k]]; break; }
+      }
+    }
+    if (hit) { out += hit[1]; i += hit[0].length; }
+    else { var c = s.charAt(i); out += HANT_CHAR[c] || c; i++; }
+  }
+  return out;
+}
+</script>
+<script>
+'use strict';
+
+/* ============================ i18n ============================ */
+const I18N = {
+  zh: {
+    'brand.sub': '棱镜量化 · 多市场研究终端',
+    'g.today': '今日', 'g.research': '研究', 'g.exec': '执行', 'g.account': '账户',
+    'nav.briefing': '晨报', 'nav.news': '新闻情报', 'nav.political': '政要监控',
+    'nav.strategy': '策略与回测', 'nav.risk': '风控闸门', 'nav.chat': '代理对话',
+    'nav.portfolio': '持仓与绩效', 'nav.academy': '学院',
+    'page.briefing.t': '晨报', 'page.briefing.s': 'A5 指挥官聚合四个专业代理的夜间产出，给出一份十分钟可读完的决策输入。',
+    'page.news.t': '新闻情报', 'page.news.s': 'A1 新闻代理：多源去重、实体与标的映射、情绪与主题标签。',
+    'page.political.t': '政要监控', 'page.political.s': 'A2 政治监控代理：只处理公开表态，保留原文与来源链接。',
+    'page.strategy.t': '策略与回测', 'page.strategy.s': 'A3 执行代理的策略框架：多因子、趋势跟随与事件叠加。',
+    'page.risk.t': '风控闸门', 'page.risk.s': 'A4 风险控制对每一张执行意图拥有否决权；否决必须留下理由。',
+    'page.chat.t': '代理对话', 'page.chat.s': 'A5 是唯一面向用户的对话入口，任何结论都必须能回溯到证据。',
+    'page.portfolio.t': '持仓与绩效', 'page.portfolio.s': '持仓、盈亏与代理贡献分解；当前为模拟撮合。',
+    'page.academy.t': '学院', 'page.academy.s': '中低频率量化的基础概念，面向订阅用户。',
+    'ui.refresh': '刷新', 'ui.updated': '更新于', 'ui.loading': '载入中…', 'ui.empty': '暂无内容',
+    'ui.mock': '示例数据', 'ui.live': '已连接后端', 'ui.offline': '后端未连接',
+    'ui.sim': '模拟撮合', 'ui.read': '阅读全文', 'ui.more': '加载更多', 'ui.search': '搜索已加载的标题',
+    'ui.all': '全部', 'ui.source': '来源', 'ui.time': '时间', 'ui.status': '状态',
+    'ui.settings': '连接设置', 'ui.back': '返回列表', 'ui.detail': '详情', 'ui.copy': '复制正文',
+    'ui.copied': '已复制', 'ui.retry': '重试', 'ui.unknown_time': '时间未知',
+    'brief.morning': '晨报', 'brief.readtime': '约 10 分钟', 'brief.intents': '今日执行意图',
+    'brief.timeline': '隔夜事件时间线', 'brief.agents': '代理运行状态', 'brief.gate': '风控闸门摘要',
+    'brief.dissent': '分歧与保留意见',
+    'news.cluster': '事件簇', 'news.sources': '来源', 'news.impact': '影响标的', 'news.sentiment': '情绪',
+    'pol.people': '监控人物', 'pol.all': '全部人物', 'pol.records': '公开发言', 'pol.runs': '采集记录',
+    'pol.pick': '选择一条发言', 'pol.pickdesc': '查看完整正文、归属依据与归档说明。',
+    'pol.official': '官方页面归属匹配', 'pol.archive': '第三方归档，未验证原帖',
+    'str.nav': '净值曲线', 'str.drawdown': '回撤', 'str.monthly': '月度收益', 'str.params': '回测参数',
+    'str.family': '策略家族', 'str.trades': '近 30 日成交', 'str.attrib': '收益归因',
+    'risk.limits': '限额与使用率', 'risk.veto': '否决与降级记录', 'risk.gate': '闸门状态',
+    'risk.trip': '今日触发', 'risk.pause': '一键暂停', 'risk.flatten': '紧急平仓',
+    'pf.positions': '当前持仓', 'pf.contrib': '收益贡献', 'pf.exposure': '市场暴露',
+    'chat.placeholder': '问 A5：今天该关注什么？', 'chat.send': '发送',
+    'chat.note': '规则应答演示 · 未接入大模型', 'chat.trace': '证据链',
+    'acad.min': '分钟阅读', 'acad.open': '展开', 'acad.close': '收起',
+    'foot.left': 'PRISMQUANT / 顾问模式 · 不下单 · 不代客理财',
+    'foot.right': '所有建议附带依据；模型可能出错，请自行判断。'
+  },
+  en: {
+    'brand.sub': 'Multi-market research terminal',
+    'g.today': 'Today', 'g.research': 'Research', 'g.exec': 'Execution', 'g.account': 'Account',
+    'nav.briefing': 'Briefing', 'nav.news': 'News', 'nav.political': 'Political watch',
+    'nav.strategy': 'Strategy', 'nav.risk': 'Risk gates', 'nav.chat': 'Commander',
+    'nav.portfolio': 'Portfolio', 'nav.academy': 'Academy',
+    'page.briefing.t': 'Morning briefing', 'page.briefing.s': 'A5 aggregates the overnight output of four specialist agents into a ten-minute decision input.',
+    'page.news.t': 'News intelligence', 'page.news.s': 'A1: multi-source deduplication, entity and instrument mapping, sentiment and topic tags.',
+    'page.political.t': 'Political watch', 'page.political.s': 'A2: public statements only, with original text and source links retained.',
+    'page.strategy.t': 'Strategy and backtest', 'page.strategy.s': 'A3 strategy framework: multi-factor, trend following and event overlay.',
+    'page.risk.t': 'Risk gates', 'page.risk.s': 'A4 holds veto power over every execution intent; a veto must carry a reason.',
+    'page.chat.t': 'Commander', 'page.chat.s': 'A5 is the only user-facing dialogue entry; every claim must trace back to evidence.',
+    'page.portfolio.t': 'Portfolio', 'page.portfolio.s': 'Positions, P&L and agent contribution; simulated matching only.',
+    'page.academy.t': 'Academy', 'page.academy.s': 'Foundations of medium-to-low-frequency quant for subscribers.',
+    'ui.refresh': 'Refresh', 'ui.updated': 'Updated', 'ui.loading': 'Loading…', 'ui.empty': 'Nothing here yet',
+    'ui.mock': 'Sample data', 'ui.live': 'Backend connected', 'ui.offline': 'Backend offline',
+    'ui.sim': 'Simulated', 'ui.read': 'Read', 'ui.more': 'Load more', 'ui.search': 'Search loaded titles',
+    'ui.all': 'All', 'ui.source': 'Source', 'ui.time': 'Time', 'ui.status': 'Status',
+    'ui.settings': 'Connection', 'ui.back': 'Back', 'ui.detail': 'Detail', 'ui.copy': 'Copy text',
+    'ui.copied': 'Copied', 'ui.retry': 'Retry', 'ui.unknown_time': 'Time unknown',
+    'brief.morning': 'Briefing', 'brief.readtime': '~10 min', 'brief.intents': 'Execution intents',
+    'brief.timeline': 'Overnight timeline', 'brief.agents': 'Agent status', 'brief.gate': 'Risk gate summary',
+    'brief.dissent': 'Dissenting views',
+    'news.cluster': 'clusters', 'news.sources': 'sources', 'news.impact': 'Instruments', 'news.sentiment': 'Sentiment',
+    'pol.people': 'Watched figures', 'pol.all': 'All figures', 'pol.records': 'Statements', 'pol.runs': 'Collection runs',
+    'pol.pick': 'Select a statement', 'pol.pickdesc': 'Full text, attribution evidence and archive notes appear here.',
+    'pol.official': 'Official page attribution', 'pol.archive': 'Third-party archive, original unverified',
+    'str.nav': 'Net asset value', 'str.drawdown': 'Drawdown', 'str.monthly': 'Monthly returns', 'str.params': 'Parameters',
+    'str.family': 'Strategy families', 'str.trades': 'Last 30 days', 'str.attrib': 'Return attribution',
+    'risk.limits': 'Limits and utilisation', 'risk.veto': 'Veto and downgrade log', 'risk.gate': 'Gate status',
+    'risk.trip': 'Tripped today', 'risk.pause': 'Pause all', 'risk.flatten': 'Emergency flatten',
+    'pf.positions': 'Open positions', 'pf.contrib': 'Contribution', 'pf.exposure': 'Market exposure',
+    'chat.placeholder': 'Ask A5: what matters today?', 'chat.send': 'Send',
+    'chat.note': 'Canned responses · no LLM wired', 'chat.trace': 'Evidence chain',
+    'acad.min': 'min read', 'acad.open': 'Expand', 'acad.close': 'Collapse',
+    'foot.left': 'PRISMQUANT / advisory mode · no order routing · no custody',
+    'foot.right': 'Every recommendation carries evidence; models err, judge for yourself.'
+  }
+};
+let LANG = 'zh';
+function t(k) {
+  const dict = I18N[LANG] || I18N.zh;
+  const s = dict[k] || I18N.zh[k] || k;
+  return LANG === 'hant' ? toHant(s) : s;
+}
+const isZh = () => LANG !== 'en';
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* blocked */ } };
+const ssGet = k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+const ssSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* blocked */ } };
+
+/* ============================ helpers ============================ */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+function esc(v) {
+  return String(v === null || v === undefined ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function safeUrl(u) {
+  if (!u) return null;
+  try { const x = new URL(u, location.href); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : null; }
+  catch (e) { return null; }
+}
+const nf = (v, d = 2) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 2) => (v > 0 ? '+' : '') + nf(v, d) + '%';
+const signCls = v => (v > 0 ? 'up' : v < 0 ? 'down' : 'muted');
+function fmtTime(iso, withDate) {
+  if (!iso) return t('ui.unknown_time');
+  const d = new Date(iso);
+  if (isNaN(d)) return t('ui.unknown_time');
+  const p = n => String(n).padStart(2, '0');
+  const hm = p(d.getHours()) + ':' + p(d.getMinutes());
+  return withDate === false ? hm : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+}
+function relTime(iso) {
+  if (!iso) return '';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (isNaN(diff)) return '';
+  if (diff < 90) return isZh() ? Math.round(diff) + ' 秒前' : Math.round(diff) + 's ago';
+  if (diff < 5400) return isZh() ? Math.round(diff / 60) + ' 分钟前' : Math.round(diff / 60) + 'm ago';
+  return fmtTime(iso);
+}
+function rng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let x = Math.imul(a ^ (a >>> 15), 1 | a);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(r) {
+  let u = 0, v = 0;
+  while (u === 0) u = r();
+  while (v === 0) v = r();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.hidden = true; }, 2200);
+}
+
+/* ============================ demo dataset ============================ */
+function buildSeries(seed, n, vol, shockAt, shockSize, targetTotal) {
+  let s = seed >>> 0, eps = [], sum = 0;
+  const T = Math.log(1 + targetTotal);
+  for (let attempt = 0; attempt < 400; attempt++) {
+    const r = rng(s); eps = []; sum = 0;
+    for (let i = 0; i < n; i++) {
+      let e = gauss(r) * vol;
+      if (shockAt && i >= shockAt && i < shockAt + 14) e -= shockSize;
+      eps.push(e); sum += e;
+    }
+    if (Math.abs(sum) < 0.055) break;
+    s = (s + 7919) >>> 0;
+  }
+  const drift = (T - sum) / n;
+  let v = 100; const out = [v];
+  for (let i = 0; i < n; i++) { v = v * (1 + drift + eps[i]); out.push(v); }
+  return out;
+}
+const NAV_N = 253;
+const NAV = buildSeries(20261023, 252, 0.0082, 196, 0.0062, 0.184);
+const BENCH = buildSeries(77712, 252, 0.0106, 196, 0.0089, 0.112);
+const TF_S = buildSeries(5150, 252, 0.0118, 150, 0.0075, 0.121);
+const EV_S = buildSeries(8801, 252, 0.0046, 0, 0, 0.053);
+
+function statsOf(series) {
+  const first = series[0], last = series[series.length - 1];
+  const total = (last / first - 1) * 100;
+  let peak = series[0], mdd = 0;
+  series.forEach(v => { if (v > peak) peak = v; mdd = Math.min(mdd, (v / peak - 1) * 100); });
+  const rets = series.slice(1).map((v, i) => v / series[i] - 1);
+  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+  const sd = Math.sqrt(rets.reduce((a, b) => a + (b - mean) ** 2, 0) / rets.length);
+  const sharpe = sd ? (mean / sd) * Math.sqrt(252) : 0;
+  const ann = (Math.pow(last / first, 252 / series.length) - 1) * 100;
+  return { total, ann, mdd, sharpe, vol: sd * Math.sqrt(252) * 100 };
+}
+const ST = statsOf(NAV);
+const BST = statsOf(BENCH);
+const STF = statsOf(TF_S);
+const STE = statsOf(EV_S);
+
+function drawdowns(series) {
+  let peak = series[0];
+  return series.map(v => { if (v > peak) peak = v; return (v / peak - 1) * 100; });
+}
+const DD = drawdowns(NAV);
+
+const D = {
+  ticks: [
+    { sym: 'NDX', label: '纳指 100', last: 21684.2, chg: 0.82 },
+    { sym: 'HSI', label: '恒生指数', last: 25941.6, chg: 0.34 },
+    { sym: 'SPX', label: '标普 500', last: 6412.8, chg: 0.41 },
+    { sym: 'BTC', label: 'BTC/USD', last: 91850, chg: -4.71 },
+    { sym: 'US10Y', label: '美债 10Y', last: 4.132, chg: -0.06 },
+    { sym: 'DXY', label: '美元指数', last: 98.42, chg: -0.18 },
+    { sym: 'XAU', label: '黄金', last: 4012.5, chg: 0.63 },
+    { sym: 'CL', label: 'WTI 原油', last: 68.94, chg: -1.12 }
+  ],
+  agents: [
+    { id: 'A1', name: '新闻代理', en: 'News', desc: '38 条新闻归并为 6 个事件簇', desc_en: '38 items merged into 6 clusters', state: 'ok', meta: '08:00', code: '38→6' },
+    { id: 'A2', name: '政治监控', en: 'Political', desc: '2 位人物 · 12 条新发言', desc_en: '2 figures · 12 new statements', state: 'ok', meta: '07:12', code: '12 新增' },
+    { id: 'A3', name: '执行代理', en: 'Execution', desc: '4 张意图，1 张被否', desc_en: '4 intents, 1 vetoed', state: 'ok', meta: '08:14', code: '4 意图' },
+    { id: 'A4', name: '风险控制', en: 'Risk', desc: '否决 1 · 降级 1 · 熔断未触发', desc_en: '1 veto · 1 degrade · breaker clear', state: 'warn', meta: '08:14', code: '2 干预' },
+    { id: 'A5', name: '指挥官', en: 'Commander', desc: '晨报已生成，等待确认', desc_en: 'Brief generated, awaiting confirm', state: 'ok', meta: '08:16', code: '1 份' }
+  ],
+  recs: [
+    {
+      sym: 'NVDA', name: 'NVIDIA Corp.', mkt: 'US', side: 'long', score: 87.4,
+      target: '178.0 – 186.0', last: 171.06, chg: 2.14, horizon: '4–8 周',
+      thesis: 'AI 资本开支预期上修，动量因子由负转正；A2 未检出相关政策风险事件；行业敞口 24.1%，通过 A4 检查。',
+      votes: [1, 1, 1, 1], veto: false
+    },
+    {
+      sym: 'AVGO', name: 'Broadcom Inc.', mkt: 'US', side: 'hold', score: 82.1,
+      target: '402.0 – 418.0', last: 389.2, chg: 0.93, horizon: '6–10 周',
+      thesis: '基本面评分居前三，但加仓意图被 A4 否决：半导体行业集中度 31.4%，超过 30% 上限，维持现有仓位。',
+      votes: [1, 1, 1, 0], veto: true
+    },
+    {
+      sym: '0700.HK', name: '腾讯控股', mkt: 'HK', side: 'long', score: 71.6,
+      target: '585.0 – 612.0', last: 596.5, chg: 1.28, horizon: '4–6 周',
+      thesis: '南向资金连续 11 日净流入；估值因子回到五年 34 分位；港币流动性边际改善。',
+      votes: [1, 1, 1, 1], veto: false
+    },
+    {
+      sym: 'BTC/USD', name: 'Bitcoin', mkt: 'CRYPTO', side: 'reduce', score: 34.2,
+      target: '88,500 – 92,000', last: 91850, chg: -4.71, horizon: '1–3 周',
+      thesis: '趋势因子转为负值，30 日波动率抬升至 62%；A4 建议仓位由 6.2% 降至 3.0%，分批执行。',
+      votes: [0, -1, -1, 1], veto: false
+    }
+  ],
+  events: [
+    {
+      id: 'E-1042', time: '06:12', srcCount: 3, sentiment: 'pos', topic: '宏观 / 利率',
+      title: '美国 9 月核心 PCE 同比 2.6%，低于市场预期',
+      summary: '商务部经济分析局公布 9 月核心 PCE 物价指数同比 2.6%（预期 2.7%），环比 0.2%。利率期货对 12 月降息概率的定价由 54% 升至 68%。',
+      tags: ['NDX', 'US10Y', 'DXY'], sources: ['BEA', 'Reuters', 'Bloomberg']
+    },
+    {
+      id: 'E-1043', time: '07:05', srcCount: 5, sentiment: 'pos', topic: '半导体 / AI 资本开支',
+      title: 'NVIDIA 与中东主权基金共建 5GW 数据中心，分三期落地',
+      summary: '五家来源交叉确认投资框架，首期 1.2GW 预计 2027 年投产。A1 将事件权重由 0.6 上调至 0.9，并映射至 NVDA、AVGO、VRT。',
+      tags: ['NVDA', 'AVGO', 'VRT'], sources: ['Reuters', 'FT', 'WSJ', 'CNBC', '官方新闻稿']
+    },
+    {
+      id: 'E-1044', time: '07:48', srcCount: 2, sentiment: 'neg', topic: '半导体 / 贸易政策',
+      title: '商务部就先进封装设备出口管制征求公众意见',
+      summary: '意见期 30 天，覆盖混合键合与硅通孔设备。当前对组合内标的收入影响估计低于 2%，但若扩围至量测设备则需重新评估。',
+      tags: ['AVGO', 'AMAT', 'LRCX'], sources: ['商务部公告', 'Reuters']
+    },
+    {
+      id: 'E-1045', time: '07:12', srcCount: 2, sentiment: 'neu', topic: '央行 / 欧元区',
+      title: '拉加德：通胀回落路径确认，但服务业工资仍偏强',
+      summary: 'A2 捕获欧洲议会听证会表态，措辞与 9 月会议纪要一致。A1 判定不改变 ECB 路径，维持 EUR 中性。',
+      tags: ['EUR', 'EU50'], sources: ['ECB 官网', 'Reuters'], political: true
+    },
+    {
+      id: 'E-1046', time: '05:30', srcCount: 4, sentiment: 'neg', topic: '能源',
+      title: 'OPEC+ 维持 11 月增产节奏不变，日均 13.7 万桶',
+      summary: '会议未讨论进一步减产。WTI 跌破 69 美元，能源板块相对强弱降至 12 分位。',
+      tags: ['CL', 'XLE'], sources: ['OPEC 秘书处', 'Reuters', 'Bloomberg', 'Argus']
+    },
+    {
+      id: 'E-1047', time: '08:02', srcCount: 3, sentiment: 'pos', topic: '资金流 / 港股',
+      title: '南向资金连续 11 日净流入，累计 412 亿港元',
+      summary: '主要流向互联网与高股息。0700.HK 单日净买入 28.4 亿港元，为近三个月最高。',
+      tags: ['0700.HK', 'HSI'], sources: ['港交所', 'Wind', 'AAStocks']
+    }
+  ],
+  limits: [
+    { name: '单笔名义敞口', en: 'Single position', limit: 8.0, used: 5.6, unit: '% NAV', state: 'ok' },
+    { name: '单日亏损', en: 'Daily loss', limit: 2.0, used: 0.4, unit: '% NAV', state: 'ok' },
+    { name: '组合杠杆', en: 'Gross leverage', limit: 1.5, used: 1.12, unit: 'x', state: 'warn' },
+    { name: '单行业集中度', en: 'Sector concentration', limit: 30.0, used: 31.4, unit: '%', state: 'bad' },
+    { name: '持仓相关性', en: 'Pairwise correlation', limit: 0.75, used: 0.68, unit: 'ρ', state: 'warn' },
+    { name: '事件熔断', en: 'Event circuit-breaker', limit: null, used: 0, unit: '', state: 'ok' }
+  ],
+  vetoes: [
+    { time: '12:04', agent: 'A4', action: 'reject', text: '拒绝对 AVGO 加仓至 9.2%：半导体行业敞口将达 31.4%，超过 30% 上限。', ref: 'E-1044' },
+    { time: '09:31', agent: 'A4', action: 'degrade', text: '将 TSLA 买入意图降级为「仅提示」：财报事件窗口内，波动率预估超出单笔风险预算。', ref: '—' },
+    { time: '昨日 15:22', agent: 'A4', action: 'pause', text: '单日亏损触及 1.8%（阈值 2.0%），暂停新开仓 20 分钟后自动恢复。', ref: '—' }
+  ],
+  positions: [
+    { sym: 'NVDA', name: 'NVIDIA Corp.', mkt: 'US', qty: '1,240', avg: 152.30, last: 171.06, mv: 212114, pnl: 12.31, w: 18.4 },
+    { sym: 'MSFT', name: 'Microsoft', mkt: 'US', qty: '480', avg: 402.10, last: 428.60, mv: 205728, pnl: 6.59, w: 17.8 },
+    { sym: 'AVGO', name: 'Broadcom', mkt: 'US', qty: '210', avg: 361.40, last: 389.20, mv: 81732, pnl: 7.69, w: 7.1 },
+    { sym: '0700.HK', name: '腾讯控股', mkt: 'HK', qty: '1,800', avg: 561.00, last: 596.50, mv: 137302, pnl: 6.33, w: 11.6 },
+    { sym: 'BTC/USD', name: 'Bitcoin', mkt: 'CRYPTO', qty: '0.85', avg: 96400, last: 91850, mv: 78073, pnl: -4.72, w: 6.8 },
+    { sym: '现金', name: 'Cash & equivalents', mkt: '—', qty: '—', avg: null, last: null, mv: 468000, pnl: 0, w: 40.6 }
+  ],
+  strategies: [
+    {
+      id: 'MF', name: '多因子评分轮动', en: 'Multi-factor rotation', mkt: 'US / HK 股票',
+      desc: '价值、质量、动量三因子等权打分，半月或月度换仓，持仓上限 12 只，单票不超过 8%。',
+      ann: ST.ann, mdd: ST.mdd, sharpe: ST.sharpe, turnover: 3.8, win: 58.4, n: 24, st: ST
+    },
+    {
+      id: 'TF', name: '趋势跟随', en: 'Trend following', mkt: '期货 / 外汇',
+      desc: '日线或四小时通道突破，ATR 止损，波动率目标 10%，不做日内高频。',
+      ann: STF.ann, mdd: STF.mdd, sharpe: STF.sharpe, turnover: 6.2, win: 44.1, n: 18, st: STF
+    },
+    {
+      id: 'EV', name: '事件叠加层', en: 'Event overlay', mkt: '组合层',
+      desc: '把 A1 / A2 的高置信事件作为仓位乘数或临时风险开关，而非独立开仓信号。',
+      ann: STE.ann, mdd: STE.mdd, sharpe: STE.sharpe, turnover: 0.9, win: 61.2, n: 11, st: STE
+    }
+  ],
+  academy: [
+    {
+      id: 'a1', tag: '基础', min: 6, title: '什么是中低频率策略，为什么我们不拼速度',
+      sum: '持仓数天到数月，收益来自因子与风险溢价，而不是撮合延迟。',
+      body: `高频与超高频策略依赖托管机房、专线和极低的撮合延迟，是资本与工程的重资产赛道。中低频率策略的持仓周期通常在数天到数月，年换手率显著低于高频，收益主要来自因子暴露（价值、质量、动量）、风险溢价与事件错价。\n\n对本项目而言，这意味着三件事：第一，不需要微秒级基础设施，普通云服务器和个人电脑足以完成研究与回测；第二，容量更友好，策略不会因为资金规模稍微变大就立刻失效；第三，可解释性更强，每一笔交易背后可以写清楚「为什么买」。\n\n代价是：中低频率的边际收益更依赖研究质量，而不是工程速度。因此本项目把重心放在因子框架、事件感知与风控闸门上，而不是行情推送的频率。`
+    },
+    {
+      id: 'a2', tag: '因子', min: 8, title: '因子投资入门：价值、质量与动量',
+      sum: '三个最常见、最容易解释的因子，以及它们为什么会失效。',
+      body: `价值因子用估值指标（市盈率、市净率、自由现金流收益率）衡量「便宜」。它长期有效，但可能连续数年跑输，尤其在成长风格占优的阶段。\n\n质量因子关注盈利能力、盈利稳定性、低杠杆与现金流质量。它在信用收缩期往往表现更好，因为市场愿意为确定性付费。\n\n动量因子买过去 6–12 个月表现较好的标的。它与其他因子相关性低，能改善组合的分散度，但在趋势反转时会集中亏损。\n\n本项目把三者等权打分，是为了避免单一因子长期失效时组合完全失去方向；代价是任何一个因子特别强的时候，组合都不会跑得最好。`
+    },
+    {
+      id: 'a3', tag: '风险', min: 7, title: '回撤、资金容量与「看起来很好」的回测',
+      sum: '最大回撤比年化收益更能决定你能不能拿住一个策略。',
+      body: `回测里最常见的问题是过拟合：参数调到刚好贴合历史，样本外立刻失效。判断方法不是看曲线有多漂亮，而是看参数微调后收益是否剧烈变化、不同市场阶段是否都还有正贡献。\n\n资金容量指策略在不显著恶化自身成交价格的前提下能管理的资金规模。中低频率策略容量通常较好，但仍受标的流动性与持仓集中度限制。本项目设置单票 8%、单行业 30% 的上限，一部分原因就是容量。\n\n最大回撤是持有体验的核心。一个年化 18%、最大回撤 9% 的策略，通常比年化 25%、最大回撤 35% 的策略更容易被真正执行——因为后者大概率会在最差的时点被放弃。`
+    },
+    {
+      id: 'a4', tag: '合规', min: 5, title: '顾问模式、风险否决与不做的事',
+      sum: '本系统默认只给建议，不代客下单、不托管资金。',
+      body: `系统默认处于顾问模式：所有执行意图先以建议形式呈现，只有用户显式确认后才进入适配器。实盘下单默认关闭，演示环境使用模拟撮合。\n\n风险控制代理（A4）对执行代理（A3）拥有否决权。否决必须记录规则编号、触发值、动作与理由，用户可以在「风控闸门」页面逐条查看。这不是为了限制收益，而是为了让每一次「不交易」也有据可查。\n\n明确不做的事：不托管客户资金、不做收益分成、不提供高频做市、不采集非公开信息、不绕过付费墙抓取内容、不对政治人物做隐蔽追踪。`
+    }
+  ],
+  chatSeed: [
+    { me: false, html: `<p>早上好。隔夜信息已经收敛完毕，${isZh() ? '现在是 08:16，距美股开盘还有 5 小时 44 分。' : ''}</p><p>今天只有一件事值得你先看：<b>半导体行业敞口已经顶到 31.4%</b>，超过 30% 的硬上限。所以 AVGO 的加仓被 A4 挡掉了，其余三张意图可以走。</p><p>另外 BTC 趋势因子转负，建议把仓位从 6.2% 降到 3.0%，分批做。</p>`, ev: 'run_id: R-20261023-0816\nA5 ← A1(6 clusters) / A2(12 statements) / A3(4 intents) / A4(1 veto,1 degrade)\ngate: sector_concentration=31.4% > limit=30.0%' }
+  ]
+};
+</script>
+<script>
+/* ============================ charts ============================ */
+const MONTHS = ['2025-11', '2026-02', '2026-05', '2026-08', '2026-10'];
+
+function navSvg(series, bench, w, h) {
+  const padL = 46, padR = 10, padT = 12, padB = 24;
+  const all = series.concat(bench);
+  let lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+  const sp = hi - lo;
+  lo = Math.floor((lo - sp * 0.03) / 5) * 5; hi = Math.ceil((hi + sp * 0.03) / 5) * 5;
+  const X = i => padL + (w - padL - padR) * i / (series.length - 1);
+  const Y = v => padT + (h - padT - padB) * (1 - (v - lo) / (hi - lo));
+  const line = arr => arr.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+  const area = line(series) + ' L' + X(series.length - 1).toFixed(1) + ' ' + Y(lo).toFixed(1) + ' L' + padL + ' ' + Y(lo).toFixed(1) + ' Z';
+  let grid = '', labs = '';
+  for (let g = 0; g <= 4; g++) {
+    const v = lo + (hi - lo) * g / 4, y = Y(v);
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" stroke="#eef0f4" stroke-width="1"/>`;
+    labs += `<text x="${padL - 7}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#a9b0bb" font-family="Georgia,serif">${v.toFixed(0)}</text>`;
+  }
+  let xl = '';
+  MONTHS.forEach((m, k) => {
+    const i = Math.round(k * (series.length - 1) / (MONTHS.length - 1));
+    xl += `<text x="${X(i).toFixed(1)}" y="${h - 6}" text-anchor="${k === 0 ? 'start' : k === MONTHS.length - 1 ? 'end' : 'middle'}" font-size="10" fill="#a9b0bb" font-family="Georgia,serif">${m}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="净值曲线">
+    <defs><linearGradient id="navg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8453a" stop-opacity=".18"/><stop offset="100%" stop-color="#c8453a" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grid}${labs}
+    <path d="${area}" fill="url(#navg)"/>
+    <path d="${line(bench)}" fill="none" stroke="#b8c0cb" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="${line(series)}" fill="none" stroke="#c8453a" stroke-width="1.7" stroke-linejoin="round"/>
+    <circle cx="${X(series.length - 1).toFixed(1)}" cy="${Y(series[series.length - 1]).toFixed(1)}" r="2.6" fill="#c8453a"/>
+    ${xl}
+  </svg>`;
+}
+
+function ddSvg(dd, w, h) {
+  const padL = 40, padR = 10, padT = 8, padB = 16;
+  const lo = Math.min.apply(null, dd);
+  const X = i => padL + (w - padL - padR) * i / (dd.length - 1);
+  const Y = v => padT + (h - padT - padB) * (v / (lo || -1));
+  const line = dd.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+  const area = line + ` L${X(dd.length - 1).toFixed(1)} ${Y(0).toFixed(1)} L${padL} ${Y(0).toFixed(1)} Z`;
+  let grid = '';
+  [0, lo / 2, lo].forEach(v => {
+    const y = Y(v);
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" stroke="#eef0f4" stroke-width="1"/>
+    <text x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#a9b0bb" font-family="Georgia,serif">${v.toFixed(0)}%</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="回撤曲线">
+    ${grid}
+    <path d="${area}" fill="#f6ecea"/>
+    <path d="${line}" fill="none" stroke="#c8453a" stroke-width="1.2"/>
+  </svg>`;
+}
+
+function monthReturns(series, per) {
+  const out = [];
+  for (let i = per; i <= series.length - 1; i += per) out.push((series[i] / series[i - per] - 1) * 100);
+  return out;
+}
+function heatSvg(vals, months) {
+  const max = Math.max.apply(null, vals.map(Math.abs)) || 1;
+  const cells = vals.map(v => {
+    const a = Math.min(1, Math.abs(v) / max);
+    const bg = v >= 0 ? `rgba(200,69,58,${(0.08 + a * 0.66).toFixed(2)})` : `rgba(31,122,99,${(0.08 + a * 0.58).toFixed(2)})`;
+    return `<i title="${v.toFixed(2)}%" style="background:${bg}"></i>`;
+  }).join('');
+  const ml = (months || []).slice(0, vals.length).map(m => `<span>${m}</span>`).join('');
+  return `<div class="heat">${cells}</div><div class="hmonths">${ml}</div>
+  <div class="hlegend"><span style="background:rgba(31,122,99,.62)"></span><span style="background:rgba(31,122,99,.24)"></span>
+  <span style="background:#eef0f4"></span><span style="background:rgba(200,69,58,.3)"></span><span style="background:rgba(200,69,58,.72)"></span>
+  <em>${Math.min.apply(null, vals).toFixed(1)}% → ${Math.max.apply(null, vals).toFixed(1)}%</em></div>`;
+}
+function barsHtml(rows) {
+  const max = Math.max.apply(null, rows.map(r => Math.abs(r.v))) || 1;
+  return rows.map(r => `<div style="display:grid;grid-template-columns:88px 1fr 54px;gap:10px;align-items:center;padding:5px 0">
+    <span style="font-size:11px;color:#67707d">${esc(r.k)}</span>
+    <span class="bar ${r.v >= 0 ? 'ok' : 'bad'}" style="height:5px"><i style="width:${(Math.abs(r.v) / max * 100).toFixed(0)}%;background:${r.v >= 0 ? '#c8453a' : '#1f7a63'}"></i></span>
+    <span class="num" style="font-size:11px;text-align:right;color:${r.v >= 0 ? '#c8453a' : '#1f7a63'}">${pct(r.v, 1)}</span>
+  </div>`).join('');
+}
+
+/* ============================ shared bits ============================ */
+function pageHead(eyebrow, title, sub, actions) {
+  return `<div class="page-head">
+    <div><div class="eyebrow">${esc(eyebrow)}</div><h1 class="page-title">${esc(title)}</h1><p class="page-sub">${esc(sub)}</p></div>
+    <div class="head-actions">${actions || ''}</div>
+  </div>`;
+}
+function footer() {
+  return `<div class="footer"><span><b>PRISMQUANT</b> &nbsp;/&nbsp; ${esc(t('foot.left'))}</span><span>${esc(t('foot.right'))}</span></div>`;
+}
+function stateDot(s) {
+  const map = { ok: 'green', warn: 'amber', bad: 'red' };
+  return `<span class="tag ${map[s] || ''}"><span class="dot"></span>${s === 'ok' ? (isZh() ? '正常' : 'OK') : s === 'warn' ? (isZh() ? '留意' : 'Watch') : (isZh() ? '触发' : 'Tripped')}</span>`;
+}
+
+/* ============================ briefing ============================ */
+function viewBriefing() {
+  const recs = D.recs.map((r, i) => {
+    const sideTag = r.side === 'long' ? `<span class="tag red">${isZh() ? '增持' : 'Long'}</span>`
+      : r.side === 'reduce' ? `<span class="tag green">${isZh() ? '减持' : 'Reduce'}</span>`
+        : `<span class="tag amber">${isZh() ? '持有' : 'Hold'}</span>`;
+    const votes = r.votes.map(v => `<span class="${v > 0 ? 'y' : v < 0 || r.veto ? 'n' : ''}"></span>`).join('');
+    return `<div class="rec">
+      <div class="rec-rank">${i + 1}</div>
+      <div>
+        <div class="rec-sym">${esc(r.sym)} ${sideTag} ${r.veto ? `<span class="tag outline">A4 ${isZh() ? '否决加仓' : 'veto'}</span>` : ''}</div>
+        <div class="rec-name">${esc(r.name)} · ${esc(r.mkt)} · ${esc(r.horizon)}</div>
+        <div class="rec-thesis">${esc(r.thesis)}</div>
+        <div class="mini-votes" title="A1 / A2 / A3 / A4 投票">${votes}</div>
+      </div>
+      <div class="rec-side">
+        <div class="rec-score">${r.score.toFixed(1)}</div>
+        <div class="rec-target">${esc(r.target)}</div>
+        <div style="font-size:10px;color:#a9b0bb;margin-top:2px">${isZh() ? '现价' : 'Last'} ${nf(r.last, 2)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const agents = D.agents.map(a => `<div class="agent-row">
+    <span class="agent-id">${a.id}</span>
+    <div><div class="agent-name">${esc(isZh() ? a.name : a.en)}</div><div class="agent-desc">${esc(isZh() ? a.desc : a.desc_en)}</div></div>
+    <div class="agent-meta"><b>${esc(a.code)}</b>${esc(a.meta)}</div>
+    ${stateDot(a.state === 'ok' ? 'ok' : 'warn')}
+  </div>`).join('');
+
+  const tl = D.events.map(e => `<div class="tl-item ${e.sentiment === 'neg' ? 'hot' : ''}">
+    <div class="tl-time">${esc(e.time)} · ${esc(e.id)}</div>
+    <div class="tl-title">${esc(e.title)}</div>
+    <div class="tl-meta"><span>${e.srcCount} ${isZh() ? '个来源' : 'sources'}</span><span class="tag ${e.sentiment === 'pos' ? 'red' : e.sentiment === 'neg' ? 'green' : ''}">${e.sentiment === 'pos' ? (isZh() ? '利多' : 'Bullish') : e.sentiment === 'neg' ? (isZh() ? '利空' : 'Bearish') : (isZh() ? '中性' : 'Neutral')}</span><span>${esc(e.topic)}</span>${e.political ? `<a href="#/political" style="color:#2f5d8a">A2 →</a>` : ''}</div>
+  </div>`).join('');
+
+  return pageHead('MORNING BRIEF / A5', t('page.briefing.t'), t('page.briefing.s'),
+    `<span class="stamp">2026-10-23 08:16 HKT · ${esc(t('brief.readtime'))}</span>
+     <button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>
+     <button class="btn sm primary" data-act="confirm">${isZh() ? '确认 3 张意图' : 'Confirm 3 intents'}</button>`)
+  + `<div class="stats">
+      <div class="stat"><div class="k">${isZh() ? '组合净值（自成立）' : 'NAV since inception'}</div><div class="v">${NAV[NAV.length - 1].toFixed(2)}<small>/ 100</small></div><div class="d up">${pct(ST.total)} · ${isZh() ? '年化' : 'ann.'} ${pct(ST.ann)}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '今日盈亏' : 'P&L today'}</div><div class="v up">+0.64%</div><div class="d">${isZh() ? '基准 NDX +0.82%' : 'Benchmark NDX +0.82%'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '风控闸门' : 'Risk gates'}</div><div class="v" style="font-size:20px;color:#c8453a">1 ${isZh() ? '项超限' : 'breach'}</div><div class="d">${isZh() ? '行业集中度 31.4% / 30%' : 'Sector 31.4% vs 30%'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '待确认意图' : 'Pending intents'}</div><div class="v">3<small>/ 4</small></div><div class="d">${isZh() ? '1 张被 A4 否决' : '1 vetoed by A4'}</div></div>
+     </div>
+     <div class="split c2">
+       <div class="stack">
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.morning'))}</h2><div class="right">A5 COMMANDER</div></div>
+           <div class="panel-b brief">
+             <p class="brief-lead">隔夜美股三大指数收涨，纳指 100 涨 0.82%。核心 PCE 同比 2.6% 低于预期，利率敏感的长久期资产领涨。A1 在 06:00–08:00 之间把 38 条新闻归并为 <b>6 个事件簇</b>，其中「NVIDIA 与中东主权基金共建 5GW 数据中心」被五家来源交叉确认，权重由 0.6 上调至 0.9。</p>
+             <p>A2 在 07:12 捕获拉加德在欧洲议会听证会的表态，措辞与 9 月会议纪要一致，<b>不改变 ECB 路径判断</b>。A4 于 12:04 否决了对 AVGO 的加仓意图——半导体行业敞口已达 <b>31.4%</b>，超过 30% 的硬上限。这是今天唯一需要你决策的地方。</p>
+             <div class="brief-meta"><span class="tag outline">${isZh() ? '证据链可追溯' : 'evidence chain'}</span><span>run_id R-20261023-0816</span><span>·</span><span>${isZh() ? '4 个代理参与' : '4 agents'}</span><span>·</span><span>${isZh() ? '生成耗时 41 秒' : 'generated in 41s'}</span></div>
+           </div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.intents'))}</h2><div class="right">A3 → A4 · ${isZh() ? '按因子评分排序' : 'ranked by score'}</div></div>
+           <div class="panel-b tight">${recs}</div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.timeline'))}</h2><div class="right">A1 / A2 · 06:00 → 08:16</div></div>
+           <div class="panel-b"><div class="tl">${tl}</div></div>
+         </section>
+       </div>
+       <div class="stack">
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.agents'))}</h2><div class="right">${isZh() ? '全部正常' : 'all nominal'}</div></div>
+           <div class="panel-b tight">${agents}</div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.gate'))}</h2><div class="right"><a href="#/risk" style="color:#2f5d8a;font-size:10px">${isZh() ? '查看全部' : 'All limits'} →</a></div></div>
+           <div class="panel-b">
+             ${D.limits.slice(0, 4).map(l => {
+               const r = l.limit ? (l.used / l.limit * 100) : 0;
+               return `<div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin-bottom:11px">
+                 <span style="font-size:11px;color:#67707d">${esc(isZh() ? l.name : l.en)}</span>
+                 <span class="num" style="font-size:11px;color:${r > 100 ? '#c8453a' : r > 80 ? '#a9762b' : '#7b8492'}">${l.used}${l.unit === 'x' ? 'x' : '%'} / ${l.limit ? l.limit + l.unit.replace('%', '%') : '—'}</span>
+                 <span class="bar ${r > 100 ? 'bad' : r > 80 ? 'warn' : 'ok'}" style="grid-column:1/-1"><i style="width:${Math.min(100, r).toFixed(0)}%"></i></span>
+               </div>`;
+             }).join('')}
+             <div class="notice" style="margin:12px 0 0">${isZh() ? '单行业集中度已超限：新增半导体敞口会被 A4 直接拒绝，直至敞口回落至 30% 以下。' : 'Sector concentration breached: new semiconductor exposure is rejected until it falls below 30%.'}</div>
+           </div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('brief.dissent'))}</h2><div class="right">1</div></div>
+           <div class="panel-b">
+             <div style="font-size:11px;line-height:1.95;color:#67707d">
+               <b style="color:#1b2430">A3 ${isZh() ? '主张' : 'argues'}</b>：AVGO 基本面评分 82.1，仍应加仓至 9.2%。<br>
+               <b style="color:#1b2430">A4 ${isZh() ? '否决' : 'vetoes'}</b>：行业敞口 31.4% &gt; 30%，且 E-1044（出口管制征求意见）尚未定价，两者叠加不可接受。<br>
+               <b style="color:#1b2430">A5 ${isZh() ? '裁定' : 'rules'}</b>：维持 A4 结论，把加仓排入观察队列，事件 30 天意见期结束后重评。
+             </div>
+           </div>
+         </section>
+       </div>
+     </div>` + footer();
+}
+
+/* ============================ news ============================ */
+let NEWS_FILTER = 'all';
+function viewNews() {
+  const totalSrc = D.events.reduce((a, b) => a + b.srcCount, 0);
+  const list = D.events.filter(e => NEWS_FILTER === 'all' || e.sentiment === NEWS_FILTER).map((e, i) => {
+    const sents = { pos: ['red', isZh() ? '利多' : 'Bullish'], neg: ['green', isZh() ? '利空' : 'Bearish'], neu: ['', isZh() ? '中性' : 'Neutral'] }[e.sentiment];
+    return `<details class="news-item" ${i === 0 ? 'open' : ''}>
+      <summary>
+        <div class="news-top"><span class="num" style="font-size:10px">${esc(e.time)}</span><span>·</span><span>${esc(e.id)}</span>
+          <span class="tag ${sents[0]}">${sents[1]}</span><span class="tag outline">${esc(e.topic)}</span></div>
+        <div class="news-title">${esc(e.title)}</div>
+        <div class="news-foot">
+          <span class="tag">${e.srcCount} ${esc(t('news.sources'))}</span>
+          ${e.tags.map(x => `<span class="tag blue">${esc(x)}</span>`).join('')}
+          ${e.political ? `<span class="tag violet">A2 ${isZh() ? '联动' : 'linked'}</span>` : ''}
+        </div>
+      </summary>
+      <span class="chev" aria-hidden="true">▾</span>
+      <div style="padding:11px 0 3px;border-top:1px dashed #eef0f4;margin-top:10px">
+        <p style="font-size:11px;line-height:1.95;color:#5c6675">${esc(e.summary)}</p>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;align-items:center">
+          <span class="micro">${isZh() ? '来源' : 'SOURCES'}</span>
+          ${e.sources.map(s => `<span style="font-size:10px;color:#7b8492;border-bottom:1px dotted #d7dce3">${esc(s)}</span>`).join('<span style="color:#d7dce3">·</span>')}
+        </div>
+      </div>
+    </details>`;
+  }).join('');
+
+  const chips = [['all', isZh() ? '全部' : 'All'], ['pos', isZh() ? '利多' : 'Bullish'], ['neg', isZh() ? '利空' : 'Bearish'], ['neu', isZh() ? '中性' : 'Neutral']]
+    .map(([k, v]) => `<button class="chip ${NEWS_FILTER === k ? 'on' : ''}" data-news="${k}">${v}</button>`).join('');
+
+  return pageHead('NEWS INTELLIGENCE / A1', t('page.news.t'), t('page.news.s'),
+    `<span class="stamp">06:00 → 08:00</span><button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
+    + `<div class="stats">
+      <div class="stat"><div class="k">${isZh() ? '事件簇' : 'Event clusters'}</div><div class="v">6</div><div class="d">${isZh() ? '由 38 条原始新闻归并' : 'from 38 raw items'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '去重率' : 'Dedup rate'}</div><div class="v">84.2<small>%</small></div><div class="d">${isZh() ? '相似度阈值 0.86' : 'threshold 0.86'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '平均来源数' : 'Sources / cluster'}</div><div class="v">3.2</div><div class="d">${isZh() ? '最高 5（NVDA 数据中心）' : 'max 5'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '情绪分布' : 'Sentiment'}</div><div class="v" style="font-size:17px;letter-spacing:1px"><span class="up">3</span> / <span style="color:#8a929f">1</span> / <span class="down">2</span></div><div class="d">${isZh() ? '利多 / 中性 / 利空' : 'bull / neutral / bear'}</div></div>
+     </div>
+     <div class="split c2">
+       <section class="panel">
+         <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '事件簇' : 'Event clusters'}</h2><div class="right">${totalSrc} ${isZh() ? '条原始新闻' : 'raw items'}</div></div>
+         <div class="filterbar">${chips}<span style="margin-left:auto;font-size:10px;color:#a9b0bb">${isZh() ? '按事件权重排序' : 'by event weight'}</span></div>
+         <div>${list}</div>
+       </section>
+       <div class="stack">
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '处理管线' : 'Pipeline'}</h2><div class="right">A1</div></div>
+           <div class="panel-b" style="font-size:11px;color:#67707d;line-height:2">
+             ${['采集：12 个 RSS 源，轮询 300 秒', '清洗：正文抽取、语言识别、时间归一', '去重：向量相似度 0.86 阈值聚类', '映射：实体 → 标的代码（人工词典 + 规则）', '打标：情绪、主题、可信度粗标', '输出：事件对象 + 每日主题热力图'].map((s, i) =>
+      `<div style="display:flex;gap:9px;padding:4px 0"><span class="num" style="color:#c3cad4;font-size:10px;width:14px">${i + 1}</span><span>${s}</span></div>`).join('')}
+           </div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '主题热度' : 'Topic heat'}</h2><div class="right">${isZh() ? '今日' : 'today'}</div></div>
+           <div class="panel-b">
+             ${[[isZh() ? 'AI 资本开支' : 'AI capex', 9], [isZh() ? '利率路径' : 'Rate path', 7], [isZh() ? '出口管制' : 'Export controls', 5], [isZh() ? '资金流' : 'Fund flows', 4], [isZh() ? '能源' : 'Energy', 3]]
+      .map(([k, v]) => `<div style="display:grid;grid-template-columns:82px 1fr 20px;gap:10px;align-items:center;padding:4px 0">
+        <span style="font-size:11px;color:#67707d">${k}</span>
+        <span class="bar" style="height:4px"><i style="width:${v / 9 * 100}%;background:#3b4552"></i></span>
+        <span class="num" style="font-size:10px;text-align:right;color:#7b8492">${v}</span></div>`).join('')}
+           </div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '已知限制' : 'Known limits'}</h2></div>
+           <div class="panel-b" style="font-size:11px;color:#8a7448;line-height:1.95">
+             ${isZh()
+      ? '情绪标签由规则与词表生成，对反讽与否定句式识别有限；跨语言事件可能被拆成两个簇；主题热力图只反映已采集来源，不代表全市场。'
+      : 'Sentiment is rule/lexicon based; irony and negation are weakly handled. Cross-language events may split into two clusters. The heatmap reflects collected sources only.'}
+           </div>
+         </section>
+       </div>
+     </div>` + footer();
+}
+</script>
+<script>
+/* ============================ political (A2, live) ============================ */
+const A2 = {
+  base: '', live: false, checked: false, checking: false,
+  people: [], peopleErr: null,
+  sel: null,
+  records: [], next: null, loading: false, err: null,
+  detail: null, detailErr: null, detailLoading: false, detailId: null,
+  sys: null, sysErr: null,
+  q: '', prov: '', reqId: 0
+};
+
+const POL_DEMO_PEOPLE = [
+  { person_id: '6d46c161-c1d3-58e8-8a09-bbe9118d9b9e', name_original: 'Christine Lagarde', name_zh: '拉加德', country_codes: ['EU'], monitoring_enabled: true },
+  { person_id: 'ccc1c525-60b7-55cf-b400-04680252257f', name_original: 'Donald J. Trump', name_zh: '特朗普', country_codes: ['US'], monitoring_enabled: true }
+];
+const POL_DEMO_RECORDS = [
+  { record_id: 'd-1', person_id: '6d46c161-c1d3-58e8-8a09-bbe9118d9b9e', source_name: 'ECB 官网', publisher_name: 'European Central Bank', title: 'Hearing at the Committee on Economic and Monetary Affairs', content_type: 'public_statement', provenance_type: 'official', verification_status: 'verified_page_attribution', published_at: '2026-10-23T07:12:00Z', page_date: '2026-10-22', original_url: 'https://www.ecb.europa.eu', language: 'en' },
+  { record_id: 'd-2', person_id: '6d46c161-c1d3-58e8-8a09-bbe9118d9b9e', source_name: 'ECB 官网', publisher_name: 'European Central Bank', title: 'Monetary policy statement — September meeting recap', content_type: 'public_statement', provenance_type: 'official', verification_status: 'verified_page_attribution', published_at: '2026-10-21T13:45:00Z', page_date: '2026-10-21', original_url: 'https://www.ecb.europa.eu', language: 'en' },
+  { record_id: 'd-3', person_id: 'ccc1c525-60b7-55cf-b400-04680252257f', source_name: '第三方归档', publisher_name: 'Archive mirror', title: 'Statement on semiconductor export controls', content_type: 'public_statement', provenance_type: 'third_party_archive', verification_status: 'archive_only', published_at: '2026-10-23T02:30:00Z', page_date: '2026-10-22', original_url: null, language: 'en' },
+  { record_id: 'd-4', person_id: 'ccc1c525-60b7-55cf-b400-04680252257f', source_name: '第三方归档', publisher_name: 'Archive mirror', title: 'Remarks before the meeting with industry executives', content_type: 'public_statement', provenance_type: 'third_party_archive', verification_status: 'archive_only', published_at: null, page_date: null, original_url: null, language: 'en' }
+];
+const POL_DEMO_BODY = {
+  'd-1': `Thank you, Chair. Let me start with the inflation outlook.\n\nThe disinflation path is now confirmed on the data we have. Headline inflation has returned close to our target, and core inflation has continued to decline, although services prices — and in particular services wages — remain stronger than we would like.\n\nWe are not pre-committing to a particular rate path. Decisions will remain meeting-by-meeting and data-dependent. But I want to be clear that the direction of travel has not changed.\n\nOn growth: the euro area economy is weaker than we projected in June, mainly because of manufacturing and construction. Labour markets remain resilient, which supports household income, but surveys point to slower hiring in the coming quarters.`,
+  'd-2': `The Governing Council today decided to keep the three key ECB interest rates unchanged.\n\nIncoming information suggests that the disinflation process is on track. The September staff projections foresee average inflation of 2.1% in 2026 and 1.9% in 2027, broadly unchanged from June.\n\nWe will continue to follow a data-dependent and meeting-by-meeting approach.`,
+  'd-3': `We will be looking very carefully at the advanced packaging side. Certain technologies should not be leaving this country without a conversation first.\n\nWe are asking the Department of Commerce to open a public comment period. Nothing is decided. But the direction should be obvious to everyone.\n\nThe companies that cooperate will find this government very easy to work with.`,
+  'd-4': `Great meeting with the semiconductor executives today. Tremendous numbers coming in. Tremendous.\n\nWe talked about the plants, we talked about jobs, and we talked about what happens if they don't build here. They will build here.`
+};
+
+function polList() {
+  const src = A2.live ? A2.people : POL_DEMO_PEOPLE;
+  return src;
+}
+function polRecords() {
+  let arr = A2.live ? A2.records : POL_DEMO_RECORDS;
+  if (A2.sel) arr = arr.filter(r => r.person_id === A2.sel);
+  if (A2.prov) arr = arr.filter(r => r.provenance_type === A2.prov);
+  if (A2.q.trim()) {
+    const q = A2.q.trim().toLowerCase();
+    arr = arr.filter(r => (r.title || '').toLowerCase().includes(q) || (r.source_name || '').toLowerCase().includes(q));
+  }
+  return arr;
+}
+function polName(p) {
+  if (!p) return '—';
+  return isZh() ? (p.name_zh || p.name_original) : (p.name_original || p.name_zh);
+}
+function polInitials(p) {
+  const n = p.name_original || p.name_zh || '?';
+  const parts = n.replace(/[^\p{L}\s]/gu, '').split(/\s+/).filter(Boolean);
+  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : n.slice(0, 2)).toUpperCase();
+}
+function verTag(v) {
+  if (v === 'verified_page_attribution') return `<span class="tag green">${esc(t('pol.official'))}</span>`;
+  if (v === 'archive_only') return `<span class="tag amber">${esc(t('pol.archive'))}</span>`;
+  if (v === 'media_quote_only') return `<span class="tag amber">${isZh() ? '媒体转述' : 'Media quote'}</span>`;
+  return `<span class="tag">${isZh() ? '待核对' : 'Needs review'}</span>`;
+}
+
+function viewPolitical() {
+  const demo = !A2.live;
+  const recordsCount = demo ? POL_DEMO_RECORDS.length : A2.records.length;
+  return pageHead('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'),
+    `<span class="stamp" id="pol-stamp">${demo ? esc(t('ui.mock')) : esc(t('ui.live'))}</span>
+     <button class="btn sm" data-act="refresh-pol">↻ ${esc(t('ui.refresh'))}</button>`)
+    + `<div class="statebar" id="pol-sys">${sysBarHtml()}</div>
+    <div class="pol">
+      <aside class="panel">
+        <div class="panel-h" style="padding:11px 12px"><h2 style="font-size:11px"><span class="accent"></span>${esc(t('pol.people'))}</h2><span class="num" style="font-size:10px;color:#a9b0bb" id="pol-pcount">${polList().length}</span></div>
+        <div style="padding:8px" id="pol-people">${peopleHtml()}</div>
+        <div style="padding:10px 12px;border-top:1px solid var(--line);font-size:10px;color:#b7bdc7;line-height:1.8">
+          ${isZh() ? '只处理公开发言，保留原始链接；不做隐蔽追踪。' : 'Public statements only, original links retained; no covert tracking.'}
+        </div>
+      </aside>
+      <section class="panel">
+        <div class="panel-h"><h2><span class="accent"></span>${esc(t('pol.records'))}</h2>
+          <div class="right"><span id="pol-rcount">${recordsCount}</span> ${isZh() ? '条' : 'items'} · ${isZh() ? '发布时间倒序' : 'newest first'}</div></div>
+        <div class="filterbar">
+          <label class="search"><span>⌕</span><input id="pol-q" type="search" placeholder="${esc(t('ui.search'))}" value="${esc(A2.q)}"></label>
+          <select class="sel" id="pol-prov">
+            <option value="">${esc(isZh() ? '全部来源' : 'All sources')}</option>
+            <option value="official" ${A2.prov === 'official' ? 'selected' : ''}>${esc(isZh() ? '官方来源' : 'Official')}</option>
+            <option value="third_party_archive" ${A2.prov === 'third_party_archive' ? 'selected' : ''}>${esc(isZh() ? '第三方归档' : 'Archive')}</option>
+          </select>
+        </div>
+        <div id="pol-records" class="rec-list polrec"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--line)">
+          <span style="font-size:10px;color:#a9b0bb">${esc(isZh() ? '时间按本机时区显示' : 'local timezone')}</span>
+          <button class="btn sm" id="pol-more" ${demo || !A2.next ? 'hidden' : ''}>${esc(t('ui.more'))}</button>
+        </div>
+      </section>
+      <aside class="panel detail" id="pol-detail" aria-live="polite">${detailHtml()}</aside>
+    </div>
+    <section class="panel" style="margin-top:12px">
+      <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '数据口径与合规边界' : 'Data basis and compliance'}</h2><div class="right">A2 / ${isZh() ? '仅公开信息' : 'public only'}</div></div>
+      <div class="panel-b" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px">
+        ${[
+      [isZh() ? '时间' : 'Time', isZh() ? '接口统一返回 UTC，前端转为本机时区；未知时间显示「时间未知」，不替换为当前时间。page_date 为纯日期，不再按 UTC 偏移。' : 'API returns UTC; converted locally. Unknown time is shown as unknown, never substituted.'],
+      [isZh() ? '归属' : 'Attribution', isZh() ? 'verified_page_attribution 只表示页面归属匹配，不代表事实已独立核实；archive_only 表示第三方归档，原帖未验证。' : 'verified_page_attribution means page attribution only, not independent fact-checking.'],
+      [isZh() ? '正文' : 'Body', isZh() ? '正文按纯文本渲染并保留换行，不注入 HTML；外链只接受 HTTP(S)，新窗口使用 noopener noreferrer。' : 'Body rendered as plain text with line breaks; only HTTP(S) links open in a new window with noopener.'],
+      [isZh() ? '边界' : 'Boundary', isZh() ? '只处理公开发言与官方公告，保留原始链接；不做隐蔽追踪，不采集非公开信息，不绕过付费墙。' : 'Public statements and official releases only. No covert tracking, no non-public data, no paywall circumvention.']
+    ].map(([k, v]) => `<div><div class="micro" style="margin-bottom:5px">${k}</div><p style="font-size:11px;line-height:1.85;color:#7b8492">${v}</p></div>`).join('')}
+      </div>
+    </section>
+    <style>
+      .pol{display:grid;grid-template-columns:180px minmax(0,1fr) minmax(310px,.92fr);gap:12px;align-items:start}
+      @media(max-width:1400px){.pol{grid-template-columns:170px minmax(0,1fr)}.pol .detail{grid-column:1/-1;position:static;max-height:none;min-height:0}}
+      @media(max-width:820px){.pol{grid-template-columns:minmax(0,1fr)}}
+      .pol .rec-item h4{font-weight:600}
+      .polrec{max-height:calc(100vh - 330px);overflow:auto}
+      @media(max-width:1400px){.polrec{max-height:none}}
+      @media(max-width:820px){.pol .hint{display:none}}
+    </style>` + footer();
+}
+
+function sysBarHtml() {
+  if (!A2.live) {
+    return `<span class="warn">${isZh() ? '未连接后端：以下为演示记录' : 'Backend not connected: sample records'}</span>
+      <span class="warn">${isZh() ? '接口地址 ' + (A2.base || 'http://127.0.0.1:8000') : 'API ' + (A2.base || 'http://127.0.0.1:8000')}</span>
+      <button class="btn-link" data-act="open-settings" style="margin-left:auto">${esc(t('ui.settings'))}</button>`;
+  }
+  const s = A2.sys || {};
+  const db = s.database && s.database.status === 'ok';
+  const col = s.collector || {};
+  const gd = s.guardian || {};
+  const bk = s.backup || {};
+  const heart = col.heartbeat_age_seconds;
+  const colOk = col.status === 'ok' || col.status === 'active' || (typeof heart === 'number' && heart < 900);
+  return `<span class="${db ? '' : 'bad'}">${isZh() ? '数据库' : 'Database'}：${db ? (isZh() ? '正常' : 'ok') : (isZh() ? '不可用' : 'unavailable')}</span>
+    <span class="${colOk ? '' : 'warn'}">${isZh() ? '采集进程' : 'Collector'}：${colOk ? (isZh() ? '心跳正常' : 'healthy') : (isZh() ? '需检查' : 'check')}${typeof heart === 'number' ? ' · ' + Math.round(heart / 60) + (isZh() ? ' 分钟前' : 'm ago') : ''}</span>
+    <span class="${gd.status === 'ok' || gd.active ? '' : 'warn'}">${isZh() ? '守护' : 'Guardian'}：${gd.active === false ? (isZh() ? '未启用' : 'off') : (gd.status || 'unknown')}</span>
+    <span class="${bk.status === 'ok' ? '' : 'warn'}">${isZh() ? '最近备份' : 'Backup'}：${bk.status === 'ok' ? fmtTime(bk.finished_at) : (bk.status || 'never')}</span>
+    <span style="margin-left:auto;color:#a9b0bb">${isZh() ? '读自 /api/v1/system-status' : 'via /api/v1/system-status'}</span>`;
+}
+function peopleHtml() {
+  const list = polList();
+  const allSel = !A2.sel;
+  let html = `<button class="person ${allSel ? 'on' : ''}" data-person="">
+    <span class="pav all">◎</span>
+    <span class="pbody"><span class="pname">${esc(t('pol.all'))}</span><span class="psub">${isZh() ? '浏览全部公开动态' : 'All statements'}</span></span>
+    <span class="pc">›</span></button>`;
+  html += list.map(p => `<button class="person ${A2.sel === p.person_id ? 'on' : ''}" data-person="${esc(p.person_id)}">
+    <span class="pav">${esc(polInitials(p))}</span>
+    <span class="pbody"><span class="pname">${esc(polName(p))}</span><span class="psub">${esc((p.country_codes || []).join(' · ') || p.name_original || '')}</span></span>
+    <span class="pc">›</span></button>`).join('');
+  if (!list.length) html += `<div style="padding:14px 10px;font-size:11px;color:#a9b0bb">${esc(A2.peopleErr || t('ui.empty'))}</div>`;
+  return html;
+}
+function recordsHtml() {
+  if (A2.loading) return `<div class="empty"><div class="sym">⋯</div><p>${esc(t('ui.loading'))}</p></div>`;
+  if (A2.err) return `<div class="empty"><div class="sym">!</div><h4>${esc(isZh() ? '读取失败' : 'Request failed')}</h4><p>${esc(A2.err)}</p><button class="btn sm" style="margin-top:10px" data-act="refresh-pol">${esc(t('ui.retry'))}</button></div>`;
+  const arr = polRecords();
+  if (!arr.length) return `<div class="empty"><div class="sym">◇</div><h4>${esc(isZh() ? '没有匹配的发言' : 'No statements')}</h4><p>${esc(isZh() ? '换一个人物，或清空搜索与来源筛选。' : 'Try another figure, or clear filters.')}</p></div>`;
+  return arr.map(r => `<button class="rec-item ${A2.detailId === r.record_id ? 'on' : ''}" data-rec="${esc(r.record_id)}">
+      <h4>${esc(r.title || (isZh() ? '（无标题）' : '(untitled)'))}</h4>
+      <div class="mm">${verTag(r.verification_status)}<span>${esc(r.source_name || '')}</span><span>·</span><span>${esc(fmtTime(r.published_at))}</span></div>
+    </button>`).join('');
+}
+function detailHtml() {
+  if (A2.detailLoading) return `<div class="empty"><div class="sym">⋯</div><p>${esc(t('ui.loading'))}</p></div>`;
+  if (A2.detailErr) return `<div class="empty"><div class="sym">!</div><h4>${esc(A2.detailErr)}</h4></div>`;
+  const d = A2.live ? A2.detail : (A2.detailId ? {
+    record_id: A2.detailId,
+    title: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).title,
+    source_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).source_name,
+    publisher_name: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).publisher_name,
+    published_at: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).published_at,
+    verification_status: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).verification_status,
+    original_url: (POL_DEMO_RECORDS.find(r => r.record_id === A2.detailId) || {}).original_url,
+    body_text: POL_DEMO_BODY[A2.detailId] || ''
+  } : null);
+  if (!d) return `<div class="empty"><div class="sym">↗</div><h4>${esc(t('pol.pick'))}</h4><p>${esc(t('pol.pickdesc'))}</p><div class="rule"></div><span class="micro">CONTEXT MATTERS</span></div>`;
+  const u = safeUrl(d.original_url);
+  return `<div class="detail-b">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${verTag(d.verification_status)}<span class="tag outline">${esc(d.source_name || '')}</span></div>
+    <h2>${esc(d.title || '')}</h2>
+    <div style="font-size:10px;color:#8a929f;line-height:1.9">${esc(d.publisher_name || '')} · ${esc(fmtTime(d.published_at))}${d.page_date ? ' · ' + esc(d.page_date) : ''}</div>
+    ${d.verification_status === 'archive_only' ? `<div class="notice">${esc(isZh() ? '这条内容来自第三方归档，原始帖子未经核验；归档媒体的描述与人物本人正文分开呈现。' : 'Third-party archive; original post unverified. Media notes are kept separate from the speaker body.')}</div>` : ''}
+    <div style="height:1px;background:var(--line);margin:14px 0"></div>
+    <div class="body-text">${esc(d.body_text || '')}</div>
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+      ${u ? `<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(isZh() ? '原始链接 ↗' : 'Original ↗')}</a>` : ''}
+      <button class="btn sm" data-act="copy-body" data-id="${esc(d.record_id)}">${esc(t('ui.copy'))}</button>
+    </div>
+  </div>`;
+}
+function refreshPolDom() {
+  const pc = $('#pol-people'); if (pc) pc.innerHTML = peopleHtml();
+  const rc = $('#pol-records'); if (rc) rc.innerHTML = recordsHtml();
+  const dt = $('#pol-detail'); if (dt) dt.innerHTML = detailHtml();
+  const sb = $('#pol-sys'); if (sb) sb.innerHTML = sysBarHtml();
+  const cnt = $('#pol-rcount'); if (cnt) cnt.textContent = polRecords().length;
+  const more = $('#pol-more'); if (more) more.hidden = !(A2.live && A2.next);
+}
+
+/* ============================ strategy ============================ */
+let STRAT = 'MF';
+const SERIES = { MF: NAV, TF: TF_S, EV: EV_S };
+function viewStrategy() {
+  const s = D.strategies.find(x => x.id === STRAT);
+  const st = s.st || ST;
+  const series = SERIES[s.id] || NAV;
+  const mret = monthReturns(series, 21);
+  const rows = D.strategies.map(x => `<tr style="cursor:pointer" data-strat="${x.id}">
+      <td><div class="sym">${esc(x.name)}</div><div class="sub">${esc(x.en)}</div></td>
+      <td class="w" style="font-size:11px;color:#7b8492">${esc(x.mkt)}</td>
+      <td class="r ${x.ann >= 0 ? 'up' : 'down'}">${pct(x.ann)}</td>
+      <td class="r down">${x.mdd.toFixed(2)}%</td>
+      <td class="r">${x.sharpe.toFixed(2)}</td>
+      <td class="r">${x.turnover.toFixed(1)}x</td>
+      <td class="w">${STRAT === x.id ? `<span class="tag green">${isZh() ? '当前查看' : 'viewing'}</span>` : `<span class="tag outline">${isZh() ? '查看' : 'view'}</span>`}</td>
+    </tr>`).join('');
+
+  return pageHead('STRATEGY ENGINE / A3', t('page.strategy.t'), t('page.strategy.s'),
+    `<span class="tag outline">${isZh() ? '回测区间' : 'Backtest'} 2025-11 → 2026-10</span>
+     <button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
+    + `<div class="stats">
+      <div class="stat"><div class="k">${isZh() ? '年化收益' : 'Annualised'}</div><div class="v up">${pct(st.ann)}</div><div class="d">${isZh() ? '基准 ' : 'Benchmark '}${pct(BST.ann)}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '最大回撤' : 'Max drawdown'}</div><div class="v down">${st.mdd.toFixed(2)}<small>%</small></div><div class="d">${isZh() ? '基准 ' : 'Benchmark '}${BST.mdd.toFixed(2)}%</div></div>
+      <div class="stat"><div class="k">Sharpe</div><div class="v">${st.sharpe.toFixed(2)}</div><div class="d">${isZh() ? '无风险利率按 0 计' : 'rf = 0'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '年化波动' : 'Volatility'}</div><div class="v">${st.vol.toFixed(2)}<small>%</small></div><div class="d">${isZh() ? '目标 10%' : 'target 10%'}</div></div>
+     </div>
+     <section class="panel">
+       <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.nav'))} — ${esc(s.name)}</h2>
+         <div class="legend"><span><i style="background:#c8453a"></i>${esc(isZh() ? '策略净值' : 'Strategy')}</span><span><i style="background:#b8c0cb"></i>${esc(isZh() ? '基准 NDX 100' : 'Benchmark')}</span></div></div>
+       <div class="panel-b" style="padding:10px 8px 4px">${navSvg(series, BENCH, 980, 268)}</div>
+     </section>
+     <div class="split c2e" style="margin-top:14px">
+       <section class="panel">
+         <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.drawdown'))}</h2><div class="right">${isZh() ? '峰谷口径' : 'peak-to-trough'} ${st.mdd.toFixed(2)}%</div></div>
+         <div class="panel-b" style="padding:8px 6px 2px">${ddSvg(drawdowns(series), 480, 150)}</div>
+       </section>
+       <section class="panel">
+         <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.monthly'))}</h2><div class="right">${isZh() ? '按 21 交易日切分' : '21 trading days'}</div></div>
+         <div class="panel-b">${heatSvg(mret, ['11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10'])}</div>
+       </section>
+     </div>
+     <div class="split c2" style="margin-top:14px">
+       <section class="panel">
+         <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.family'))}</h2><div class="right">${isZh() ? '点击切换图表' : 'click to switch'}</div></div>
+         <table class="t"><thead><tr><th>${esc(t('str.family'))}</th><th>${isZh() ? '市场' : 'Market'}</th><th style="text-align:right">${isZh() ? '年化' : 'Ann.'}</th><th style="text-align:right">${isZh() ? '回撤' : 'MDD'}</th><th style="text-align:right">Sharpe</th><th style="text-align:right">${isZh() ? '换手' : 'Turnover'}</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+         <div class="panel-b" style="border-top:1px solid var(--line);font-size:11px;line-height:1.9;color:#67707d">${esc(s.desc)}</div>
+       </section>
+       <div class="stack">
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.attrib'))}</h2><div class="right">${isZh() ? '累计' : 'cumulative'} ${pct(ST.total, 1)}</div></div>
+           <div class="panel-b">
+             ${barsHtml([
+      { k: isZh() ? '动量因子' : 'Momentum', v: 8.1 },
+      { k: isZh() ? '质量因子' : 'Quality', v: 5.6 },
+      { k: isZh() ? '价值因子' : 'Value', v: 3.8 },
+      { k: isZh() ? '事件叠加' : 'Event overlay', v: 2.1 },
+      { k: isZh() ? '交易成本' : 'Costs', v: -1.2 },
+      { k: isZh() ? '现金拖累' : 'Cash drag', v: -0.4 },
+      { k: isZh() ? '其他' : 'Other', v: 0.4 }
+    ])}
+           </div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.params'))}</h2></div>
+           <table class="t"><tbody>
+             <tr><td style="color:#7b8492">${isZh() ? '换仓频率' : 'Rebalance'}</td><td class="r">${isZh() ? '半月 / 月度' : 'Bi-weekly'}</td></tr>
+             <tr><td style="color:#7b8492">${isZh() ? '持仓上限' : 'Max holdings'}</td><td class="r">12</td></tr>
+             <tr><td style="color:#7b8492">${isZh() ? '单票上限' : 'Max weight'}</td><td class="r">8.0%</td></tr>
+             <tr><td style="color:#7b8492">${isZh() ? '滑点假设' : 'Slippage'}</td><td class="r">8 bps</td></tr>
+             <tr><td style="color:#7b8492">${isZh() ? '手续费' : 'Commission'}</td><td class="r">3 bps</td></tr>
+             <tr><td style="color:#7b8492">${isZh() ? '样本外区间' : 'Out-of-sample'}</td><td class="r">2026-07 → 10</td></tr>
+           </tbody></table>
+         </section>
+       </div>
+     </div>
+     <div class="panel" style="margin-top:14px">
+       <div class="panel-b" style="font-size:11px;color:#8a7448;line-height:1.95">
+         ${isZh() ? '回测为日频、含结算与合约展期假设，未计入融资成本与税费。所有曲线为历史模拟，不代表未来收益；样本外区间较短，参数稳定性仍需观察。' : 'Daily-frequency backtest with settlement and roll assumptions; financing and taxes excluded. Historical simulation only.'}
+       </div>
+     </div>` + footer();
+}
+</script>
+<script>
+/* ============================ risk ============================ */
+function viewRisk() {
+  const rows = D.limits.map(l => {
+    const r = l.limit ? Math.min(999, l.used / l.limit * 100) : 0;
+    const st = r > 100 ? 'bad' : r > 80 ? 'warn' : 'ok';
+    const u = l.unit === 'x' ? l.used + 'x' : l.used + (l.unit === 'ρ' ? '' : '%');
+    const lim = l.limit === null ? (isZh() ? '未触发' : 'not tripped') : (l.unit === 'x' ? l.limit + 'x' : l.limit + (l.unit === 'ρ' ? '' : '%'));
+    return `<tr>
+      <td><div class="sym" style="font-weight:500">${esc(isZh() ? l.name : l.en)}</div><div class="sub">${isZh() ? esc(l.en) : ''}</div></td>
+      <td class="r" style="color:#7b8492">${esc(lim)}</td>
+      <td class="r">${esc(u)}</td>
+      <td style="width:210px"><div style="display:flex;align-items:center;gap:10px">
+        <div class="bar ${st}" style="height:5px;flex:1;min-width:90px"><i style="width:${Math.min(100, r).toFixed(0)}%"></i></div>
+        <span class="num" style="font-size:10px;width:34px;text-align:right;color:${r > 100 ? '#c8453a' : r > 80 ? '#a9762b' : '#7b8492'}">${l.limit ? r.toFixed(0) + '%' : '—'}</span></div></td>
+      <td class="w">${stateDot(st)}</td>
+    </tr>`;
+  }).join('');
+
+  const vetoes = D.vetoes.map(v => `<div style="padding:12px 16px;border-bottom:1px solid #f1f3f6">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="tag ${v.action === 'reject' ? 'red' : v.action === 'pause' ? 'amber' : ''}">${v.action === 'reject' ? (isZh() ? '否决' : 'REJECT') : v.action === 'pause' ? (isZh() ? '暂停' : 'PAUSE') : (isZh() ? '降级' : 'DEGRADE')}</span>
+      <span class="num" style="font-size:10px;color:#a9b0bb;white-space:nowrap">${esc(v.time)}</span>
+      <span class="tag outline">${esc(v.agent)}</span>
+      ${v.ref !== '—' ? `<a href="#/news" class="tag blue" style="text-decoration:none">${esc(v.ref)}</a>` : ''}
+    </div>
+    <div style="font-size:11px;line-height:1.85;color:#5c6675;margin-top:7px">${esc(v.text)}</div>
+  </div>`).join('');
+
+  return pageHead('RISK CONTROL / A4', t('page.risk.t'), t('page.risk.s'),
+    `<span class="stamp">${esc(isZh() ? '闸门阈值来自配置，非模型推断' : 'thresholds from config, not inferred')}</span>
+     <button class="btn sm danger" data-act="pause">⏸ ${esc(t('risk.pause'))}</button>
+     <button class="btn sm danger" data-act="flatten">⊘ ${esc(t('risk.flatten'))}</button>`)
+    + `<div class="stats">
+      <div class="stat"><div class="k">${esc(t('risk.trip'))}</div><div class="v" style="color:#c8453a">1</div><div class="d">${isZh() ? '单行业集中度 31.4%' : 'sector 31.4%'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '今日干预' : 'Interventions'}</div><div class="v">2</div><div class="d">${isZh() ? '否决 1 · 降级 1' : '1 veto · 1 degrade'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '熔断状态' : 'Circuit breaker'}</div><div class="v" style="font-size:20px;color:#1f7a63">${isZh() ? '未触发' : 'Clear'}</div><div class="d">${isZh() ? '最近一次 昨日 15:22' : 'last: yesterday 15:22'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '实盘下单' : 'Live routing'}</div><div class="v" style="font-size:20px">${isZh() ? '关闭' : 'Off'}</div><div class="d">${isZh() ? '模拟撮合 · 需显式开启' : 'simulated · opt-in'}</div></div>
+     </div>
+     <section class="panel">
+       <div class="panel-h"><h2><span class="accent"></span>${esc(t('risk.gate'))}</h2><div class="right">${isZh() ? 'A4 是必经检查点，不可跳过' : 'mandatory checkpoint'}</div></div>
+       <div class="panel-b">
+         <div class="chain">
+           <div class="cn"><b>A1</b><span>${isZh() ? '新闻' : 'News'}</span></div>
+           <span class="ar">→</span>
+           <div class="cn"><b>A2</b><span>${isZh() ? '政要' : 'Political'}</span></div>
+           <span class="ar">→</span>
+           <div class="cn"><b>A3</b><span>${isZh() ? '执行意图' : 'Intent'}</span></div>
+           <span class="ar">→</span>
+           <div class="cn gate"><b>A4</b><span>${isZh() ? '风险闸门' : 'Risk gate'}</span></div>
+           <span class="ar">→</span>
+           <div class="cn"><b>A5</b><span>${isZh() ? '指挥官' : 'Commander'}</span></div>
+           <span class="ar">→</span>
+           <div class="cn dim"><b>AD</b><span>${isZh() ? '适配器（关）' : 'Adapter (off)'}</span></div>
+         </div>
+         <div style="font-size:11px;color:#8a7448;background:#fbf8f1;border-left:2px solid #ddc9a5;padding:7px 10px;margin-top:14px;line-height:1.9">
+           ${isZh() ? '任何意图绕过 A4 都会被拒绝写入；否决记录包含规则编号、触发值与理由，可在下方逐条查看。' : 'Any intent bypassing A4 is rejected at write time; each veto carries rule id, trigger value and reason.'}
+         </div>
+       </div>
+     </section>
+     <div class="split c2" style="margin-top:14px">
+       <section class="panel">
+         <div class="panel-h"><h2><span class="accent"></span>${esc(t('risk.limits'))}</h2><div class="right">${isZh() ? '实时' : 'live'}</div></div>
+         <table class="t"><thead><tr><th>${isZh() ? '规则' : 'Rule'}</th><th style="text-align:right">${isZh() ? '上限' : 'Limit'}</th><th style="text-align:right">${isZh() ? '当前' : 'Used'}</th><th>${isZh() ? '使用率' : 'Utilisation'}</th><th>${esc(t('ui.status'))}</th></tr></thead><tbody>${rows}</tbody></table>
+       </section>
+       <div class="stack">
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('risk.veto'))}</h2><div class="right">3</div></div>
+           <div style="max-height:290px;overflow:auto">${vetoes}</div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '紧急控制' : 'Emergency controls'}</h2></div>
+           <div class="panel-b">
+             <p style="font-size:11px;color:#7b8492;line-height:1.9;margin-bottom:11px">${isZh() ? '暂停会阻止新开仓，已有持仓保留；紧急平仓会按市价撤出全部持仓并进入只读模式。演示环境不发送任何真实委托。' : 'Pause blocks new entries and keeps positions; flatten exits everything at market and enters read-only. Nothing is routed in the demo.'}</p>
+             <div style="display:flex;gap:8px;flex-wrap:wrap">
+               <button class="btn danger" data-act="pause">⏸ ${esc(t('risk.pause'))}</button>
+               <button class="btn danger" data-act="flatten">⊘ ${esc(t('risk.flatten'))}</button>
+             </div>
+           </div>
+         </section>
+       </div>
+     </div>
+     <style>
+       .chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+       .cn{border:1px solid var(--line2);border-radius:5px;padding:7px 13px;min-width:74px;text-align:center;background:#fff}
+       .cn b{display:block;font:400 11px var(--serif);letter-spacing:.6px}
+       .cn span{display:block;font-size:10px;color:#a9b0bb;margin-top:1px}
+       .cn.gate{border-color:var(--red);background:var(--red-soft)}
+       .cn.gate span{color:var(--red)}
+       .cn.dim{opacity:.55;border-style:dashed}
+       .ar{color:#c3cad4;font-size:11px}
+     </style>` + footer();
+}
+
+/* ============================ chat ============================ */
+let CHAT = null;
+function chatInit() {
+  CHAT = [{ me: false, html: `<p>${isZh() ? '早上好。隔夜信息已经收敛完毕，现在是 08:16，距美股开盘还有 5 小时 44 分。' : 'Good morning. Overnight intake is complete; 08:16 now, 5h44m to the US open.'}</p>
+    <p>${isZh() ? '今天只有一件事值得你先看：<b>半导体行业敞口已经顶到 31.4%</b>，超过 30% 的硬上限。所以 AVGO 的加仓被 A4 挡掉了，其余三张意图可以走。' : 'One thing matters most: <b>semiconductor exposure is at 31.4%</b>, above the 30% hard cap. The AVGO add was vetoed by A4; the other three intents can proceed.'}</p>
+    <p>${isZh() ? '另外 BTC 趋势因子转负，建议把仓位从 6.2% 降到 3.0%，分批做。' : 'BTC trend factor turned negative; reduce from 6.2% to 3.0% in tranches.'}</p>`, ev: 'run_id: R-20261023-0816\nA5 <- A1(6 clusters) / A2(12 statements) / A3(4 intents) / A4(1 veto, 1 degrade)\ngate: sector_concentration = 31.4% > limit 30.0%' }];
+}
+function viewChat() {
+  if (!CHAT) chatInit();
+  return pageHead('COMMANDER / A5', t('page.chat.t'), t('page.chat.s'),
+    `<span class="tag outline">${esc(t('chat.note'))}</span>`)
+    + `<div class="chat-wrap">
+      <section class="panel">
+        <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '对话' : 'Dialogue'}</h2><div class="right">run R-20261023-0816</div></div>
+        <div class="msgs" id="msgs">${CHAT.map(m => msgHtml(m)).join('')}</div>
+        <div class="quick">
+          ${[isZh() ? '今天该做什么？' : 'What should I do today?', isZh() ? '风控挡了什么？' : 'What did risk block?', isZh() ? '为什么减 BTC？' : 'Why cut BTC?', isZh() ? 'NVDA 还能加吗？' : 'Can I add NVDA?'].map(q => `<button class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join('')}
+        </div>
+        <form class="composer" id="chat-form">
+          <input id="chat-input" placeholder="${esc(t('chat.placeholder'))}" autocomplete="off">
+          <button class="btn primary" type="submit">${esc(t('chat.send'))}</button>
+        </form>
+      </section>
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '本次运行' : 'This run'}</h2></div>
+          <div class="panel-b" style="font-size:11px;line-height:2;color:#67707d">
+            <div style="display:flex;justify-content:space-between"><span>run_id</span><span class="num">R-20261023-0816</span></div>
+            <div style="display:flex;justify-content:space-between"><span>${isZh() ? '触发' : 'Trigger'}</span><span>${isZh() ? '定时 08:00' : 'schedule 08:00'}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>${isZh() ? '参与代理' : 'Agents'}</span><span>A1 A2 A3 A4</span></div>
+            <div style="display:flex;justify-content:space-between"><span>${isZh() ? '耗时' : 'Latency'}</span><span class="num">41.2s</span></div>
+            <div style="display:flex;justify-content:space-between"><span>${isZh() ? '证据条目' : 'Evidence'}</span><span class="num">19</span></div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '引用来源' : 'Citations'}</h2></div>
+          <div class="panel-b" style="padding:6px 0">
+            ${D.events.slice(0, 4).map(e => `<a href="#/news" style="display:block;padding:8px 14px;border-bottom:1px solid #f1f3f6;text-decoration:none">
+              <div style="font-size:10px;color:#a9b0bb" class="num">${esc(e.id)} · ${e.srcCount} ${isZh() ? '源' : 'src'}</div>
+              <div style="font-size:11px;line-height:1.6;color:#4c5663;margin-top:2px">${esc(e.title)}</div></a>`).join('')}
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-b" style="font-size:10px;color:#8a7448;line-height:1.9">
+            ${isZh() ? 'A5 不会绕过 A4，也不会给出没有依据的结论。若证据不足，它会直接说「无法判断」。' : 'A5 cannot bypass A4 and will not assert unsupported conclusions; when evidence is thin it says so.'}
+          </div>
+        </section>
+      </div>
+    </div>` + footer();
+}
+function msgHtml(m) {
+  if (m.me) {
+    return `<div class="msg"><span class="mav me">${isZh() ? '我' : 'ME'}</span>
+      <div class="mbody"><div class="mhead"><b>${isZh() ? '你' : 'You'}</b><span>${esc(m.time || '')}</span></div>
+      <div class="mtext">${m.html}</div></div></div>`;
+  }
+  return `<div class="msg"><span class="mav a5">A5</span>
+    <div class="mbody"><div class="mhead"><b>Commander</b><span>${isZh() ? '指挥官代理' : 'Commander agent'}</span><span>·</span><span>41.2s</span></div>
+    <div class="mtext">${m.html}</div>
+    ${m.ev ? `<details class="evidence"><summary>${esc(t('chat.trace'))} · ${m.ev.split('\n').length} ${isZh() ? '条' : 'lines'}</summary><div class="ev-b">${esc(m.ev)}</div></details>` : ''}
+    </div></div>`;
+}
+function a5Reply(q) {
+  const s = q.toLowerCase();
+  if (/风控|風險|risk|挡|擋|否|block|veto/.test(s)) {
+    return {
+      html: `<p>${isZh() ? '今天 A4 拦了两件事：' : 'A4 intervened twice today:'}</p>
+        <ul><li><b>拒绝</b> — AVGO 加仓至 9.2%。触发规则 <code>sector_concentration</code>：半导体 31.4% &gt; 上限 30.0%。</li>
+        <li><b>降级</b> — TSLA 买入意图改为「仅提示」，理由是财报事件窗口的波动率预估超出单笔风险预算。</li></ul>
+        <p>${isZh() ? '这不是模型判断，是配置里的硬阈值。要改只能改配置并留下版本记录。' : 'These are hard config thresholds, not model judgement. Changing them requires a config version record.'}</p>`,
+      ev: 'rule: sector_concentration\nlimit: 30.0%\nobserved: 31.4%\naction: reject\nintent: AVGO add -> 9.2% NAV\n---\nrule: event_window_vol\nobserved: implied_vol_p95 = 61%\naction: degrade to notify\ntarget: TSLA'
+    };
+  }
+  if (/btc|比特|bitcoin|crypto|减|減/.test(s)) {
+    return {
+      html: `<p>${isZh() ? 'BTC 的趋势因子在昨天收盘后转负，30 日实现波动率从 41% 抬到 62%。A3 原本给的仓位是 6.2%，A4 建议压到 3.0%。' : 'BTC trend factor turned negative after yesterday close; 30d realised vol rose from 41% to 62%. A3 sized 6.2%, A4 recommends 3.0%.'}</p>
+        <p>${isZh() ? '我选择分批而不是一次性：先减 1.6 个点，剩下 1.6 个点在 88,500 附近挂限价。理由是这条腿与其他持仓相关性只有 0.21，一次性砍掉会让组合分散度下降过快。' : 'I chose tranches over a single exit: cut 1.6pp now, rest near 88,500. Correlation to the rest of the book is 0.21; a full exit would cut diversification too fast.'}</p>`,
+      ev: 'factor: trend_30d = -0.42 (prev +0.11)\nvol_30d: 41% -> 62%\ncorr_to_book: 0.21\naction: reduce 6.2% -> 3.0% in 2 tranches'
+    };
+  }
+  if (/nvda|英伟达|nvidia|加|买/.test(s)) {
+    return {
+      html: `<p>${isZh() ? '不能加。行业敞口已经 31.4%，任何新增半导体都会把数字推得更高，A4 会直接拒绝。' : 'No. Sector exposure is already 31.4%; any semiconductor add pushes it higher and A4 rejects it.'}</p>
+        <p>${isZh() ? '但这不是看空。NVDA 评分 87.4 仍是四张意图里最高的，只是组合层面没有空间。可选路径有两条：一是等 AVGO 仓位自然回落到 30% 以下，二是先减掉一个低分半导体标的腾出额度。第二条我没有主动建议，因为会触发额外交易成本。' : 'This is not a bearish call. NVDA scores 87.4, the highest of the four. There is simply no room at portfolio level. Two options: wait for AVGO to drift below the cap, or trim a lower-scored semi first — the latter adds cost, so I did not propose it.'}</p>`,
+      ev: 'score: NVDA 87.4 (rank 1/4)\nsector: semis = 31.4% (limit 30.0%)\nheadroom: -1.4pp\nrecommendation: hold, revisit after E-1044 comment window'
+    };
+  }
+  if (/今天|做什么|做什麼|today|what/.test(s)) {
+    return {
+      html: `<p>${isZh() ? '三件事，按顺序：' : 'Three things, in order:'}</p>
+        <ol style="margin:6px 0;padding-left:18px"><li>${isZh() ? '确认 3 张意图（NVDA 增持、0700.HK 增持、BTC 减持），AVGO 那张维持不动。' : 'Confirm three intents (add NVDA, add 0700.HK, trim BTC); leave AVGO unchanged.'}</li>
+        <li>${isZh() ? '把 E-1044（先进封装出口管制征求意见）加入 30 天观察队列，意见期结束前不要新增半导体敞口。' : 'Queue E-1044 for 30 days; no new semi exposure until the comment window closes.'}</li>
+        <li>${isZh() ? '检查港股通资金流是否延续第 12 日 — 这是 0700.HK 那张意图的主要支撑。' : 'Check whether southbound inflows extend to day 12 — that is the main support for the 0700.HK intent.'}</li></ol>
+        <p>${isZh() ? '不需要盯盘。中低频率的意思是，你一天看两次就够了。' : 'No need to watch the tape. Medium-to-low frequency means twice a day is enough.'}</p>`,
+      ev: 'pending_intents: 3 confirmed / 1 vetoed\nwatchlist_add: E-1044 (30d)\nmonitor: southbound_flow (day 11)'
+    };
+  }
+  return {
+    html: `<p>${isZh() ? '这个问题我需要更具体的指向。目前我手上的上下文是：6 个事件簇、12 条政要发言、4 张执行意图、2 次风控干预。' : 'I need a narrower question. Current context: 6 event clusters, 12 statements, 4 intents, 2 risk interventions.'}</p>
+      <p>${isZh() ? '你可以问「某只标的能不能加」「某条事件影响哪些持仓」「风控为什么挡了某张单」。' : 'Try asking: can I add X, which holdings does event Y affect, or why did risk block Z.'}</p>`,
+    ev: 'context: clusters=6 statements=12 intents=4 interventions=2'
+  };
+}
+
+/* ============================ portfolio ============================ */
+function viewPortfolio() {
+  const total = D.positions.reduce((a, p) => a + p.mv, 0);
+  const eq = D.positions.filter(p => p.sym !== '现金').reduce((a, p) => a + p.mv, 0);
+  const pnl = D.positions.filter(p => p.avg).reduce((a, p) => a + p.mv * p.pnl / 100, 0);
+  const rows = D.positions.map(p => `<tr>
+    <td><div class="sym">${esc(p.sym)}</div><div class="sub">${esc(p.name)}</div></td>
+    <td class="w" style="font-size:11px;color:#7b8492">${esc(p.mkt)}</td>
+    <td class="r">${esc(p.qty)}</td>
+    <td class="r">${p.avg ? nf(p.avg, 2) : '—'}</td>
+    <td class="r">${p.last ? nf(p.last, 2) : '—'}</td>
+    <td class="r">${nf(p.mv, 0)}</td>
+    <td class="r ${signCls(p.pnl)}">${p.avg ? pct(p.pnl) : '—'}</td>
+    <td class="r" style="color:#7b8492">${(p.mv / total * 100).toFixed(1)}%</td>
+  </tr>`).join('');
+  const exp = [
+    { k: isZh() ? '美股' : 'US equity', v: D.positions.filter(p => p.mkt === 'US').reduce((a, p) => a + p.mv, 0) },
+    { k: isZh() ? '港股' : 'HK equity', v: D.positions.filter(p => p.mkt === 'HK').reduce((a, p) => a + p.mv, 0) },
+    { k: isZh() ? '加密' : 'Crypto', v: D.positions.filter(p => p.mkt === 'CRYPTO').reduce((a, p) => a + p.mv, 0) },
+    { k: isZh() ? '现金' : 'Cash', v: D.positions.filter(p => p.sym === '现金').reduce((a, p) => a + p.mv, 0) }
+  ].map(x => `<div style="display:grid;grid-template-columns:64px 1fr 48px;gap:9px;align-items:center;padding:5px 0">
+      <span style="font-size:11px;color:#67707d">${esc(x.k)}</span>
+      <span class="bar" style="height:5px"><i style="width:${(x.v / total * 100).toFixed(0)}%;background:#3b4552"></i></span>
+      <span class="num" style="font-size:11px;text-align:right">${(x.v / total * 100).toFixed(1)}%</span>
+    </div>`).join('');
+
+  return pageHead('PORTFOLIO / F-09', t('page.portfolio.t'), t('page.portfolio.s'),
+    `<span class="tag amber">${esc(t('ui.sim'))}</span><button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
+    + `<div class="stats">
+      <div class="stat"><div class="k">${isZh() ? '总市值' : 'Market value'}</div><div class="v">${nf(total, 0)}<small>USD</small></div><div class="d">${isZh() ? '含现金折算' : 'incl. cash'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '持仓浮动盈亏' : 'Unrealised P&L'}</div><div class="v ${pnl >= 0 ? 'up' : 'down'}">${nf(pnl, 0)}</div><div class="d">${pct(pnl / (eq - pnl) * 100, 2)} ${isZh() ? '对成本' : 'on cost'}</div></div>
+      <div class="stat"><div class="k">${isZh() ? '风险资产占比' : 'Risk assets'}</div><div class="v">${(eq / total * 100).toFixed(1)}<small>%</small></div><div class="d">${isZh() ? '现金 ' : 'cash '}${(100 - eq / total * 100).toFixed(1)}%</div></div>
+      <div class="stat"><div class="k">${isZh() ? '组合 Beta' : 'Portfolio beta'}</div><div class="v">0.86</div><div class="d">${isZh() ? '对 NDX 100，60 日' : 'to NDX 100, 60d'}</div></div>
+     </div>
+     <div class="split c2">
+       <section class="panel">
+         <div class="panel-h"><h2><span class="accent"></span>${esc(t('pf.positions'))}</h2><div class="right">${D.positions.length - 1} ${isZh() ? '个标的' : 'instruments'}</div></div>
+         <table class="t"><thead><tr><th>${isZh() ? '标的' : 'Instrument'}</th><th>${isZh() ? '市场' : 'Mkt'}</th><th style="text-align:right">${isZh() ? '数量' : 'Qty'}</th><th style="text-align:right">${isZh() ? '成本' : 'Avg'}</th><th style="text-align:right">${isZh() ? '现价' : 'Last'}</th><th style="text-align:right">${isZh() ? '市值 USD' : 'MV USD'}</th><th style="text-align:right">${isZh() ? '盈亏' : 'P&L'}</th><th style="text-align:right">${isZh() ? '权重' : 'Weight'}</th></tr></thead><tbody>${rows}</tbody></table>
+         <div class="panel-b" style="border-top:1px solid var(--line);font-size:10px;color:#a9b0bb;line-height:1.8">${isZh() ? '港股按 1 HKD = 7.82 USD 折算；所有价格为模拟撮合口径，非真实成交。' : 'HK positions converted at 7.82 HKD/USD. Prices are simulated, not executed.'}</div>
+       </section>
+       <div class="stack">
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('pf.exposure'))}</h2></div>
+           <div class="panel-b">${exp}</div>
+         </section>
+         <section class="panel">
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('pf.contrib'))}</h2><div class="right">${isZh() ? '按代理' : 'by agent'}</div></div>
+           <div class="panel-b">
+             ${barsHtml([
+      { k: 'A3 ' + (isZh() ? '因子选股' : 'factors'), v: 7.4 },
+      { k: 'A1 ' + (isZh() ? '新闻事件' : 'news'), v: 2.9 },
+      { k: 'A2 ' + (isZh() ? '政要事件' : 'political'), v: 0.7 },
+      { k: 'A4 ' + (isZh() ? '风控减损' : 'risk saved'), v: 1.1 },
+      { k: isZh() ? '市场 Beta' : 'Market beta', v: 4.2 }
+    ])}
+           </div>
+         </section>
+       </div>
+     </div>` + footer();
+}
+
+/* ============================ academy ============================ */
+let ACAD = null;
+function viewAcademy() {
+  if (!ACAD) {
+    const feat = D.academy[0], rest = D.academy.slice(1);
+    const cards = rest.map(a => `<a class="acad-card" href="#/academy" data-article="${a.id}">
+      <div style="display:flex;align-items:center;gap:7px"><span class="tag outline">${esc(a.tag)}</span><span class="micro">${a.min} ${esc(t('acad.min'))}</span></div>
+      <h3>${esc(a.title)}</h3>
+      <p>${esc(a.sum)}</p>
+      <div class="meta"><span>${isZh() ? '展开' : 'Open'} →</span></div>
+    </a>`).join('');
+    return pageHead('ACADEMY', t('page.academy.t'), t('page.academy.s'),
+      `<span class="stamp">${isZh() ? '订阅用户可读' : 'subscribers only'}</span>`)
+      + `<section class="panel" style="margin-bottom:14px">
+        <div class="panel-b" style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(240px,.65fr);gap:30px;padding:26px 26px 24px">
+          <div>
+            <div class="micro">FEATURED · ${esc(feat.tag)} · ${feat.min} ${esc(t('acad.min'))}</div>
+            <h2 style="font:400 24px/1.5 var(--serif);margin:12px 0 10px;letter-spacing:.2px">${esc(feat.title)}</h2>
+            <p style="font-size:12px;color:#6f7987;line-height:1.95;max-width:54ch">${esc(feat.sum)}</p>
+            <a class="btn sm" href="#/academy" data-article="${feat.id}" style="margin-top:18px;display:inline-flex;text-decoration:none">${isZh() ? '开始阅读' : 'Start reading'} →</a>
+          </div>
+          <div style="border-left:1px solid var(--line);padding-left:26px">
+            <div class="micro" style="margin-bottom:10px">${isZh() ? '课程目录' : 'SYLLABUS'}</div>
+            ${D.academy.map((a, i) => `<div style="display:flex;gap:9px;padding:6px 0;font-size:11px;color:#67707d">
+              <span class="num" style="color:#c3cad4;font-size:10px;width:14px">0${i + 1}</span>
+              <span style="line-height:1.5">${esc(a.title.split('，')[0])}</span></div>`).join('')}
+          </div>
+        </div>
+      </section>
+      <div class="split c3" style="gap:12px">${cards}</div>` + footer();
+  }
+  const a = D.academy.find(x => x.id === ACAD);
+  if (!a) { ACAD = null; return viewAcademy(); }
+  return pageHead('ACADEMY / ' + a.tag, a.title, a.sum,
+    `<button class="btn sm" data-act="acad-back">← ${esc(t('ui.back'))}</button>`)
+    + `<section class="panel"><div class="panel-b" style="max-width:76ch">
+      <div class="byline" style="margin-bottom:16px"><span class="tag outline">${esc(a.tag)}</span><span>${a.min} ${esc(t('acad.min'))}</span><span>·</span><span>PrismQuant Research</span></div>
+      ${a.body.split('\n\n').map(p => `<p style="font:13px/2 var(--serif);color:#3b4552;margin-bottom:16px">${esc(p)}</p>`).join('')}
+      <div class="notice" style="margin-top:22px">${isZh() ? '本文为产品内教育内容，不构成投资建议。' : 'Educational content, not investment advice.'}</div>
+    </div></section>` + footer();
+}
+</script>
+<script>
+/* ============================ shell render ============================ */
+function renderTicker() {
+  const html = D.ticks.map(x => {
+    const d = x.chg > 0 ? '▲' : x.chg < 0 ? '▼' : '·';
+    const last = x.last >= 1000 ? nf(x.last, 0) : nf(x.last, x.last >= 100 ? 2 : 3);
+    return `<div class="tick"><span class="sym">${esc(x.sym)}</span><b>${last}</b>
+      <span class="chg ${signCls(x.chg)}">${d} ${Math.abs(x.chg).toFixed(2)}%</span></div>`;
+  }).join('');
+  $('#ticker').innerHTML = html + `<div class="tick-end">${esc(isZh() ? '延迟 15 分钟 · 示例数据' : 'DELAYED 15 MIN · SAMPLE')}</div>`;
+}
+
+const NAVS = [
+  { g: 'g.today', items: [['briefing', 0], ['chat', 0]] },
+  { g: 'g.research', items: [['news', 6], ['political', 0], ['strategy', 0], ['academy', 0]] },
+  { g: 'g.exec', items: [['risk', 1], ['portfolio', 0]] }
+];
+function renderNav(cur) {
+  $('#side').innerHTML = NAVS.map(grp => `<div class="navgroup">
+    <div class="navgroup-t">${esc(t(grp.g))}</div>
+    ${grp.items.map(([id, c]) => `<a class="navlink ${cur === id ? 'active' : ''}" href="#/${id}">
+      <span>${esc(t('nav.' + id))}</span>${c ? `<span class="cnt">${id === 'political' && A2.live ? (A2.records.length || '·') : c}</span>` : ''}
+    </a>`).join('')}
+  </div>`).join('');
+  $('#brand-sub').textContent = t('brand.sub');
+  const p = $('#plan-badge');
+  if (p) p.textContent = isZh() ? 'PROFESSIONAL · 试用' : 'PROFESSIONAL · TRIAL';
+}
+
+/* ============================ connection ============================ */
+function setConn(kind) {
+  const el = $('#conn'); if (!el) return;
+  el.className = 'conn ' + kind;
+  $('#conn-text').textContent = kind === 'ok' ? t('ui.live') : kind === 'bad' ? t('ui.offline') : t('ui.mock');
+  const note = $('#conn-note');
+  if (note) {
+    note.textContent = kind === 'ok'
+      ? (isZh() ? '政要监控读取真实后端 · 其余模块为演示数据' : 'Political watch reads the live backend; other modules sample')
+      : (isZh() ? '未连接后端 · 界面数据为演示样例' : 'Backend offline; all data is sample');
+  }
+}
+function apiUrl(p) { return (A2.base || '') + p; }
+async function apiGet(path, params, signal) {
+  const q = new URLSearchParams();
+  Object.keys(params || {}).forEach(k => {
+    const v = params[k];
+    if (v !== undefined && v !== null && v !== '') q.set(k, v);
+  });
+  const url = apiUrl(path) + (q.toString() ? '?' + q.toString() : '');
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 12000);
+  if (signal) { if (signal.aborted) ctrl.abort(); else signal.addEventListener('abort', () => ctrl.abort(), { once: true }); }
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const map = { 404: isZh() ? '记录不存在或已被移除。' : 'Record not found.', 422: isZh() ? '请求参数不正确，请刷新页面后重试。' : 'Bad request.', 503: isZh() ? '数据库暂不可用，请稍后重试。' : 'Database unavailable.' };
+      const msg = (body && body.detail && body.detail.message) || map[res.status] || ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(isZh() ? '请求超时，请检查后端服务。' : 'Request timed out.');
+    if (e instanceof TypeError) throw new Error(isZh() ? '无法连接后端：请确认服务已启动，或把本页加入后端 CORS 白名单。' : 'Cannot reach backend: check the service and CORS allow-list.');
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+async function probe() {
+  A2.checking = true;
+  try {
+    await apiGet('/health');
+    A2.live = true; setConn('ok');
+    loadSys(); loadPeople();
+    if (routeName() === 'political') loadRecords(false);
+  } catch (e) {
+    A2.live = false; setConn('demo');
+  } finally { A2.checked = true; A2.checking = false; }
+  renderNav(routeName());
+  if (routeName() === 'political') render();
+}
+async function loadSys() {
+  try { A2.sys = await apiGet('/api/v1/system-status'); A2.sysErr = null; }
+  catch (e) { A2.sysErr = e.message; }
+  refreshPolDom();
+}
+async function loadPeople() {
+  try {
+    const d = await apiGet('/api/v1/people', { limit: 100 });
+    A2.people = (d.items || []); A2.peopleErr = null;
+  } catch (e) { A2.peopleErr = e.message; }
+  refreshPolDom();
+}
+async function loadRecords(append) {
+  const rid = ++A2.reqId;
+  A2.loading = true; A2.err = null;
+  refreshPolDom();
+  try {
+    const params = { limit: 20, order: 'published_desc' };
+    if (A2.sel) params.person_id = A2.sel;
+    if (append && A2.next) params.cursor = A2.next;
+    const d = await apiGet('/api/v1/public-records', params);
+    if (rid !== A2.reqId) return;
+    A2.records = append ? A2.records.concat(d.items || []) : (d.items || []);
+    A2.next = d.next_cursor || null;
+  } catch (e) {
+    if (rid !== A2.reqId) return;
+    A2.err = e.message;
+    if (!append) { A2.records = []; A2.next = null; }
+  } finally {
+    if (rid === A2.reqId) { A2.loading = false; refreshPolDom(); renderNav(routeName()); }
+  }
+}
+async function loadDetail(id) {
+  A2.detailId = id; A2.detail = null; A2.detailErr = null;
+  if (!A2.live) { A2.detailLoading = false; refreshPolDom(); return; }
+  A2.detailLoading = true; refreshPolDom();
+  try { A2.detail = await apiGet('/api/v1/public-records/' + encodeURIComponent(id)); }
+  catch (e) { A2.detailErr = e.message; }
+  finally { A2.detailLoading = false; refreshPolDom(); }
+}
+
+/* ============================ chat ============================ */
+function sendChat(q) {
+  q = (q || '').trim();
+  if (!q) return;
+  if (!CHAT) chatInit();
+  const d = new Date();
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  CHAT.push({ me: true, html: '<p>' + esc(q) + '</p>', time: hm });
+  const r = a5Reply(q);
+  CHAT.push({ me: false, html: r.html, ev: r.ev });
+  const box = $('#msgs');
+  if (box) { box.innerHTML = CHAT.map(msgHtml).join(''); box.scrollTop = box.scrollHeight; }
+  const inp = $('#chat-input'); if (inp) inp.value = '';
+}
+
+/* ============================ router ============================ */
+const ROUTES = {
+  briefing: viewBriefing, news: viewNews, political: viewPolitical, strategy: viewStrategy,
+  risk: viewRisk, chat: viewChat, portfolio: viewPortfolio, academy: viewAcademy
+};
+function routeName() {
+  const h = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
+  return ROUTES[h] ? h : 'briefing';
+}
+let renderGuard = 0;
+function render() {
+  const cur = routeName();
+  const v = $('#view');
+  if (!v) return;
+  v.innerHTML = ROUTES[cur]();
+  renderNav(cur);
+  setConn(A2.live ? 'ok' : (A2.checked ? 'demo' : 'demo'));
+  if (cur === 'political') {
+    refreshPolDom();
+    const q = $('#pol-q');
+    if (q) q.addEventListener('input', e => { A2.q = e.target.value; const rc = $('#pol-records'); if (rc) rc.innerHTML = recordsHtml(); const cnt = $('#pol-rcount'); if (cnt) cnt.textContent = polRecords().length; });
+    const pv = $('#pol-prov');
+    if (pv) pv.addEventListener('change', e => { A2.prov = e.target.value; const rc = $('#pol-records'); if (rc) rc.innerHTML = recordsHtml(); const cnt = $('#pol-rcount'); if (cnt) cnt.textContent = polRecords().length; });
+    const more = $('#pol-more');
+    if (more) more.addEventListener('click', () => loadRecords(true));
+  }
+  if (cur === 'chat') { const box = $('#msgs'); if (box) box.scrollTop = box.scrollHeight; }
+  window.scrollTo(0, 0);
+}
+
+/* ============================ events ============================ */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act],[data-person],[data-rec],[data-strat],[data-news],[data-article],[data-ask]');
+  if (!el) return;
+  const act = el.getAttribute('data-act');
+  if (act) {
+    if (act === 'refresh') { toast(isZh() ? '已刷新（演示数据不变）' : 'Refreshed (sample data)'); render(); }
+    else if (act === 'confirm') { toast(isZh() ? '已确认 3 张意图，进入模拟撮合队列' : '3 intents confirmed into the simulated queue'); }
+    else if (act === 'pause') { toast(isZh() ? '已暂停新开仓（模拟）· 持仓保留' : 'New entries paused (simulated); positions kept'); }
+    else if (act === 'flatten') { toast(isZh() ? '紧急平仓需二次确认；演示环境未发送任何委托' : 'Flatten requires confirmation; nothing routed in demo'); }
+    else if (act === 'refresh-pol') { if (A2.live) { loadRecords(false); loadSys(); } else { probe(); toast(isZh() ? '正在尝试连接后端…' : 'Probing backend…'); } }
+    else if (act === 'open-settings') { openSettings(); }
+    else if (act === 'copy-body') {
+      const b = document.querySelector('#pol-detail .body-text');
+      if (b && navigator.clipboard) navigator.clipboard.writeText(b.textContent).then(() => toast(t('ui.copied'))).catch(() => toast(t('ui.copied')));
+    }
+    else if (act === 'acad-back') { ACAD = null; render(); }
+    return;
+  }
+  const person = el.getAttribute('data-person');
+  if (person !== null && el.classList.contains('person')) {
+    A2.sel = person || null; A2.q = ''; A2.prov = '';
+    A2.records = []; A2.next = null; A2.detailId = null; A2.detail = null; A2.reqId++;
+    refreshPolDom();
+    if (A2.live) loadRecords(false);
+    return;
+  }
+  const rec = el.getAttribute('data-rec');
+  if (rec) { loadDetail(rec); return; }
+  const strat = el.getAttribute('data-strat');
+  if (strat) { STRAT = strat; render(); return; }
+  const nf2 = el.getAttribute('data-news');
+  if (nf2) { NEWS_FILTER = nf2; render(); return; }
+  const art = el.getAttribute('data-article');
+  if (art) { e.preventDefault(); ACAD = art; render(); return; }
+  const ask = el.getAttribute('data-ask');
+  if (ask) { sendChat(ask); return; }
+});
+
+document.addEventListener('submit', e => {
+  if (e.target.id === 'chat-form') {
+    e.preventDefault();
+    sendChat($('#chat-input').value);
+  }
+  if (e.target.id === 'login-form') {
+    e.preventDefault();
+    enterApp();
+  }
+});
+
+window.addEventListener('hashchange', render);
+
+/* ============================ dialogs ============================ */
+function openSettings() {
+  const dlg = $('#dlg-settings');
+  $('#api-base').value = A2.base || '';
+  $('#settings-err').textContent = '';
+  dlg.showModal();
+}
+function initSettings() {
+  const dlg = $('#dlg-settings');
+  $('#settings-save').addEventListener('click', async ev => {
+    ev.preventDefault();
+    const raw = $('#api-base').value.trim();
+    let base = '';
+    if (raw) {
+      try {
+        const u = new URL(raw);
+        if (!['http:', 'https:'].includes(u.protocol) || u.pathname !== '/' || u.search || u.hash) throw new Error('bad');
+        base = u.origin;
+      } catch (err) {
+        $('#settings-err').textContent = isZh() ? '请填写不带路径或参数的 HTTP(S) 地址。' : 'Enter a plain HTTP(S) origin.';
+        return;
+      }
+    }
+    A2.base = base;
+    lsSet('pq_api_base', base);
+    dlg.close();
+    A2.records = []; A2.people = []; A2.detail = null; A2.detailId = null; A2.next = null;
+    await probe();
+    render();
+    toast(base ? (isZh() ? '已保存，正在重连…' : 'Saved, reconnecting…') : (isZh() ? '已切回同源' : 'Back to same origin'));
+  });
+  $('#btn-settings').addEventListener('click', openSettings);
+  $('#btn-account').addEventListener('click', () => {
+    $('#account-body').innerHTML = `<p>${isZh() ? '当前方案：PROFESSIONAL（试用）— 研究、半自动与全自动能力，配额见下。' : 'Plan: PROFESSIONAL (trial) — research, semi-auto and full-auto with quotas below.'}</p>
+      <table class="t" style="margin:6px 0 4px"><tbody>
+        <tr><td style="color:#7b8492">${isZh() ? '月度回测任务' : 'Backtests / month'}</td><td class="r">200 / 500</td></tr>
+        <tr><td style="color:#7b8492">${isZh() ? '监控人物' : 'Watched figures'}</td><td class="r">2 / 50</td></tr>
+        <tr><td style="color:#7b8492">${isZh() ? '模拟组合' : 'Sim portfolios'}</td><td class="r">1 / 3</td></tr>
+        <tr><td style="color:#7b8492">${isZh() ? '实盘下单' : 'Live routing'}</td><td class="r">${isZh() ? '关闭' : 'Off'}</td></tr>
+      </tbody></table>
+      <p style="margin-top:12px">${isZh() ? '账户：LIU Tsz Ho · 250139930 · ITE4116M Group 1。演示环境不涉及真实扣费。' : 'Account: LIU Tsz Ho · 250139930 · ITE4116M Group 1. No real billing in the demo.'}</p>`;
+    $('#dlg-account').showModal();
+  });
+}
+
+/* ============================ boot ============================ */
+function enterApp() {
+  const b = $('#boot');
+  if (b) b.remove();
+  ssSet('pq_entered', '1');
+}
+const BOOT_I18N = {
+  zh: {
+    title: '把隔夜的信息，<br>收敛成三张可以执行的意图。',
+    sub: '多市场中低频量化 · 五代理决策链路 · 顾问模式，不下单。',
+    f1: '新闻、政要公开表态、因子评分与风险闸门收敛成一份十分钟可读完的晨报。',
+    f2: '执行代理的每一张意图都必须通过 A4；否决必须留下规则编号与触发值。',
+    f3: '每条建议都带证据链与来源，禁止没有依据的「必涨」结论。',
+    cardTitle: '登录终端', email: '工作邮箱', pwd: '密码',
+    remember: '记住本设备', forgot: '忘记密码', enter: '进入终端',
+    note: '课程演示账户 · 任意密码可进入 · 当前为顾问模式（不下单）',
+    or: '或', guest: '以访客身份查看演示'
+  },
+  en: {
+    title: 'Overnight information,<br>reduced to three executable intents.',
+    sub: 'Multi-market medium-to-low-frequency quant · five-agent chain · advisory mode.',
+    f1: 'News, public statements, factor scores and risk gates collapse into a ten-minute morning read.',
+    f2: 'Every intent from the execution agent must clear A4; a veto records the rule id and trigger value.',
+    f3: 'Every recommendation carries an evidence chain and sources; no unfounded calls.',
+    cardTitle: 'Sign in', email: 'Work email', pwd: 'Password',
+    remember: 'Remember this device', forgot: 'Forgot password', enter: 'Enter terminal',
+    note: 'Demo account · any password works · advisory mode, no orders',
+    or: 'or', guest: 'Continue as guest'
+  }
+};
+function applyBoot() {
+  const dict = BOOT_I18N[LANG] || BOOT_I18N.zh;
+  document.querySelectorAll('[data-boot]').forEach(el => {
+    let v = dict[el.getAttribute('data-boot')];
+    if (v === undefined) return;
+    if (LANG === 'hant') v = toHant(v);
+    el.innerHTML = v;
+  });
+}
+
+let HANT_OBS = null;
+function hantNode(node) {
+  if (!node || node.__h) return;
+  if (/^[\s\S]*[\u4e00-\u9fff][\s\S]*$/.test(node.nodeValue)) node.nodeValue = toHant(node.nodeValue);
+  node.__h = 1;
+}
+function hantAttrs(el) {
+  ['placeholder', 'title', 'aria-label'].forEach(a => {
+    const v = el.getAttribute && el.getAttribute(a);
+    if (v && /[\u4e00-\u9fff]/.test(v)) el.setAttribute(a, toHant(v));
+  });
+}
+function hantWalk(root) {
+  if (!root) return;
+  if (root.nodeType === 3) { hantNode(root); return; }
+  if (root.nodeType !== 1) return;
+  hantAttrs(root);
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  let n;
+  while ((n = w.nextNode())) {
+    if (n.parentNode && /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) continue;
+    hantNode(n);
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('[placeholder],[title],[aria-label]'), hantAttrs);
+}
+function enableHant() {
+  if (document.title) document.title = toHant(document.title);
+  hantWalk(document.body);
+  if (HANT_OBS) return;
+  HANT_OBS = new MutationObserver(muts => {
+    for (const m of muts) {
+      if (m.type === 'childList') {
+        m.addedNodes.forEach(n => hantWalk(n));
+      }
+    }
+  });
+  HANT_OBS.observe(document.body, { childList: true, subtree: true });
+}
+function disableHant() {
+  if (HANT_OBS) { HANT_OBS.disconnect(); HANT_OBS = null; }
+}
+function setLang(l, silent) {
+  LANG = (l === 'hant' || l === 'en') ? l : 'zh';
+  document.documentElement.lang = LANG === 'zh' ? 'zh-Hans' : LANG === 'hant' ? 'zh-Hant' : 'en';
+  ['zh', 'hant', 'en'].forEach(k => {
+    const b = document.getElementById('lang-' + k);
+    if (b) { b.classList.toggle('on', LANG === k); b.setAttribute('aria-pressed', LANG === k); }
+    const b2 = document.querySelector('.boot-lang [data-lang="' + k + '"]');
+    if (b2) b2.classList.toggle('on', LANG === k);
+  });
+  applyBoot();
+  disableHant();
+  renderTicker();
+  if (document.querySelector('#view')) render();
+  if (LANG === 'hant') enableHant();
+  if (!silent) lsSet('pq_lang', LANG);
+}
+function initLang() {
+  const saved = lsGet('pq_lang');
+  const lm = (location.search.match(/[?&]lang=(zh|hant|en)/) || [])[1] || saved || 'zh';
+  setLang(lm, true);
+  ['zh', 'hant', 'en'].forEach(k => {
+    const b = document.getElementById('lang-' + k);
+    if (b) b.addEventListener('click', () => setLang(k));
+    const b2 = document.querySelector('.boot-lang [data-lang="' + k + '"]');
+    if (b2) b2.addEventListener('click', () => setLang(k));
+  });
+}
+
+(function boot() {
+  const skip = /(\?|&)skip=1/.test(location.search) || ssGet('pq_entered');
+  if (skip) { const b = $('#boot'); if (b) b.remove(); }
+  const guest = $('#boot-demo');
+  if (guest) guest.addEventListener('click', enterApp);
+  const lf = $('#login-form');
+  if (lf) {
+    const submit = lf.querySelector('.boot-submit');
+    if (submit) submit.addEventListener('click', ev => { ev.preventDefault(); enterApp(); });
+    lf.addEventListener('submit', ev => { ev.preventDefault(); enterApp(); });
+  }
+  const saved = lsGet('pq_api_base');
+  A2.base = saved !== null ? saved : (location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '');
+  const am = (location.search.match(/[?&]api=([^&]+)/) || [])[1];
+  if (am) {
+    try {
+      const u = new URL(decodeURIComponent(am));
+      if (['http:', 'https:'].includes(u.protocol) && u.pathname === '/') {
+        A2.base = u.origin;
+        lsSet('pq_api_base', A2.base);
+      }
+    } catch (e) { /* ignore malformed override */ }
+  }
+  renderTicker();
+  initSettings();
+  initLang();
+  render();
+  setConn(A2.checked ? 'demo' : 'demo');
+  probe();
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/[?&]nosw=1/.test(location.search)) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+  }
+})();
+</script>
+</body>
+</html>
