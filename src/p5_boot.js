@@ -47,7 +47,11 @@ function setConn(kind) {
   if (note) {
     note.textContent = kind === 'ok'
       ? (isZh() ? 'A2 政治监控读取真实后端 · 其余页面为真实快照或空状态' : 'A2 reads the live backend; other pages are real snapshots or empty')
-      : (isZh() ? 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据' : 'A2 offline, no snapshots imported — only real data is shown');
+      : (isZh()
+        ? (location.protocol === 'file:'
+          ? 'file:// 打开时无法连接本机 API · 请用 start-frontend.cmd'
+          : 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据')
+        : 'A2 offline, no snapshots imported — only real data is shown');
   }
 }
 function apiUrl(p) { return (A2.base || '') + p; }

@@ -111,7 +111,7 @@ function emptyPage(eyebrow, title, sub, rows, note) {
         <div class="empty" style="padding:52px 32px 38px">
           <div class="sym">◇</div>
           <h4>${isZh() ? '这一页还没有可显示的数据' : 'Nothing to show yet'}</h4>
-          <p style="max-width:54ch;margin:10px auto 0">${note || ''}</p>
+          <p style="max-width:58ch;margin:12px auto 0;text-align:left;line-height:1.95">${note || ''}</p>
           <div class="rule"></div>
           <span class="micro">WAITING FOR UPSTREAM</span>
         </div>

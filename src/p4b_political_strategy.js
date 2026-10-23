@@ -63,6 +63,9 @@ function viewPolitical() {
     [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', '<span class="tag amber">待运行</span>']
   ], isZh()
     ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。启动后端后点右上角「连接设置」或按刷新即可。<br>启动方式：<code>python -X utf8 -m app</code>（在 political-monitor 目录）。'
+      + (location.protocol === 'file:'
+        ? '<br><br><b>你现在是用 file:// 双击打开的。</b>浏览器会封堵这种页面发出的跨域请求，所以永远连不上本机 API —— 这是浏览器安全规定，不是程序的问题。请改按下面的做法：<br>① 双击 <code>start-frontend.cmd</code>；② 用 <code>http://localhost:5173</code> 打开。<br><a href="http://localhost:5173/index.html?skip=1&api=http://127.0.0.1:8000#/political" style="color:#c8453a">点这里直接试 →</a>'
+        : '')
     : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Start the backend, then refresh.");
   const demo = !A2.live;
   const recordsCount = demo ? POL_DEMO_RECORDS.length : A2.records.length;
