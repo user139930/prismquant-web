@@ -103,8 +103,8 @@ function stateDot(s) {
 /* ============================ empty / overview ============================ */
 function emptyPage(eyebrow, title, sub, rows, note) {
   const table = `<table class="t" style="border-top:1px solid var(--line)">
-      <thead><tr><th>${isZh() ? '需要什么' : 'Needed'}</th><th>${isZh() ? '谁提供' : 'Owner'}</th><th>${isZh() ? '现状' : 'Status'}</th></tr></thead>
-      <tbody>${rows.map(r => `<tr><td style="color:#3b4552">${r[0]}</td><td style="color:#7b8492">${r[1]}</td><td class="w">${r[2]}</td></tr>`).join('')}</tbody>
+      <thead><tr><th>${isZh() ? '需要什么' : 'Needed'}</th><th style="text-align:right">${isZh() ? '现状' : 'Status'}</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td style="color:#3b4552">${r[0]}</td><td class="w" style="text-align:right">${r[r.length - 1]}</td></tr>`).join('')}</tbody>
     </table>`;
   return pageHead(eyebrow, title, sub, `<span class="tag amber">${isZh() ? '暂无数据' : 'No data'}</span>`)
     + `<section class="panel"><div class="panel-b" style="padding:0">
@@ -127,8 +127,8 @@ function viewOverview() {
     ['A1', isZh() ? '新闻代理' : 'News', 'news-main · Streamlit', isZh() ? '无 HTTP 接口' : 'no HTTP API', LIVE.news ? ok : no],
     ['A2', isZh() ? '政治监控' : 'Political', 'political-monitor · FastAPI', isZh() ? '需 PostgreSQL + 采集' : 'needs PG', A2.live ? ok : no],
     ['A3', isZh() ? '执行代理' : 'Execution', 'ndxbots · CLI', isZh() ? '回测需五分钟数据' : 'needs 5-min bars', LIVE.bt ? ok : no],
-    ['A4', isZh() ? '风险控制' : 'Risk', '—', isZh() ? '未提供代码' : 'not provided', na],
-    ['A5', isZh() ? '指挥官' : 'Commander', '—', isZh() ? '未提供代码' : 'not provided', na]
+    ['A4', isZh() ? '风险控制' : 'Risk', isZh() ? '未提供代码' : 'not provided', na],
+    ['A5', isZh() ? '指挥官' : 'Commander', isZh() ? '未提供代码' : 'not provided', na]
   ];
   const rows = agents.map(a => `<div class="agent-row">
       <span class="agent-id">${a[0]}</span>
@@ -169,9 +169,9 @@ function viewOverview() {
 
 function viewBriefing() {
   return emptyPage('MORNING BRIEF / A5', t('page.briefing.t'), t('page.briefing.s'), [
-    [isZh() ? 'A5 指挥官产出的一份晨报（run 记录 + 四张意图）' : 'One A5 briefing run', 'AU Ka Chai (A5)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A4 风控闸门状态与当日干预记录' : 'A4 gate state and interventions', 'XU Yijia (A4)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A1/A3 的输入（事件簇、执行意图）' : 'A1/A3 inputs', 'XU Yijia / XU Jinrong', LIVE.news || LIVE.bt ? '<span class="tag green">部分就绪</span>' : '<span class="tag amber">未接入</span>']
+    [isZh() ? 'A5 指挥官产出的一份晨报（run 记录 + 四张意图）' : 'One A5 briefing run', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A4 风控闸门状态与当日干预记录' : 'A4 gate state and interventions', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A1/A3 的输入（事件簇、执行意图）' : 'A1/A3 inputs', LIVE.news || LIVE.bt ? '<span class="tag green">部分就绪</span>' : '<span class="tag amber">未接入</span>']
   ], isZh()
     ? '晨报由 A5 指挥官聚合 A1–A4 的产出生成。A5 目前没有可运行的代码，所以这里不放任何编造的摘要或推荐。'
     : 'The briefing is produced by A5 from A1–A4 output. A5 has no runnable code yet, so no summary is invented here.');
@@ -218,8 +218,8 @@ function liveNewsStats(items) {
 }
 function viewNews() {
   if (!LIVE.news) return emptyPage('NEWS INTELLIGENCE / A1', t('page.news.t'), t('page.news.s'), [
-    [isZh() ? 'A1 导出的新闻快照 <code>data/news.json</code>' : 'A1 snapshot <code>data/news.json</code>', 'XU Yijia (A1)', '<span class="tag amber">未导入</span>'],
-    [isZh() ? '或 A1 的只读 HTTP 接口' : 'or a read-only endpoint', 'XU Yijia (A1)', '<span class="tag outline">不存在</span>']
+    [isZh() ? 'A1 导出的新闻快照 <code>data/news.json</code>' : 'A1 snapshot <code>data/news.json</code>', '<span class="tag amber">未导入</span>'],
+    [isZh() ? '或 A1 的只读 HTTP 接口' : 'or a read-only endpoint', '<span class="tag outline">不存在</span>']
   ], isZh()
     ? '新闻来自 A1（news-main：Streamlit + SQLite）。它没有 HTTP 接口，所以先用 <code>tools/export.py</code> 把数据库导出成 JSON，或直接跑 <code>tools/api_server.py</code>。'
     : 'News lives in A1 (Streamlit + SQLite) with no HTTP API. Export it with <code>tools/export.py</code>, or run <code>tools/api_server.py</code>.');

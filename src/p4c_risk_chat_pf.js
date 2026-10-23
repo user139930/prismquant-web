@@ -2,8 +2,8 @@
 /* ============================ risk ============================ */
 function viewRisk() {
   return emptyPage('RISK CONTROL / A4', t('page.risk.t'), t('page.risk.s'), [
-    [isZh() ? 'A4 风控引擎（限额表、否决记录、熔断状态）' : 'A4 risk engine', 'XU Yijia (A4)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A3 的实时执行意图（风控的输入）' : 'A3 intents (the input)', 'XU Jinrong (A3)', '<span class="tag amber">未接入</span>']
+    [isZh() ? 'A4 风控引擎（限额表、否决记录、熔断状态）' : 'A4 risk engine', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A3 的实时执行意图（风控的输入）' : 'A3 intents (the input)', '<span class="tag amber">未接入</span>']
   ], isZh()
     ? '风控闸门的每一条限额、每一次否决，都必须来自真实的风控引擎。A4 目前没有可运行的代码，这里不放任何编造的限额或否决记录。'
     : 'Every limit and every veto must come from a real risk engine. A4 has no runnable code, so nothing is invented here.');
@@ -16,8 +16,8 @@ function chatInit() {
 }
 function viewChat() {
   return emptyPage('COMMANDER / A5', t('page.chat.t'), t('page.chat.s'), [
-    [isZh() ? 'A5 指挥官对话接口（含证据链）' : 'A5 commander endpoint', 'AU Ka Chai (A5)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A1–A4 的产出作为上下文' : 'A1–A4 output as context', '—', '<span class="tag amber">未接入</span>']
+    [isZh() ? 'A5 指挥官对话接口（含证据链）' : 'A5 commander endpoint', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A1–A4 的产出作为上下文' : 'A1–A4 output as context', '<span class="tag amber">未接入</span>']
   ], isZh()
     ? '对话的每一句回答都必须能追溯到真实来源。没有 A5 与 A1–A4 的接入，这里不会用预设答案冒充 AI 回复。'
     : 'Every answer must trace back to real sources. Without A5 and A1–A4 connected, no canned replies are shown.');
@@ -80,8 +80,8 @@ function a5Reply(q) {
 /* ============================ portfolio ============================ */
 function viewPortfolio() {
   return emptyPage('PORTFOLIO / F-09', t('page.portfolio.t'), t('page.portfolio.s'), [
-    [isZh() ? '模拟账户持仓与成交记录' : 'Simulated positions and fills', 'XU Jinrong (A3)', '<span class="tag amber">未接入</span>'],
-    [isZh() ? '或券商沙盒账户（Futu SIMULATE）' : 'or a broker sandbox account', '—', '<span class="tag outline">未绑定</span>']
+    [isZh() ? '模拟账户持仓与成交记录' : 'Simulated positions and fills', '<span class="tag amber">未接入</span>'],
+    [isZh() ? '或券商沙盒账户（Futu SIMULATE）' : 'or a broker sandbox account', '<span class="tag outline">未绑定</span>']
   ], isZh()
     ? '持仓与盈亏必须来自真实账户或模拟撮合。没有接入之前，这里不放虚构的持仓表。'
     : 'Positions and P&L must come from a real or simulated account. Nothing is fabricated here.');

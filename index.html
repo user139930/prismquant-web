@@ -874,8 +874,8 @@ function stateDot(s) {
 /* ============================ empty / overview ============================ */
 function emptyPage(eyebrow, title, sub, rows, note) {
   const table = `<table class="t" style="border-top:1px solid var(--line)">
-      <thead><tr><th>${isZh() ? '需要什么' : 'Needed'}</th><th>${isZh() ? '谁提供' : 'Owner'}</th><th>${isZh() ? '现状' : 'Status'}</th></tr></thead>
-      <tbody>${rows.map(r => `<tr><td style="color:#3b4552">${r[0]}</td><td style="color:#7b8492">${r[1]}</td><td class="w">${r[2]}</td></tr>`).join('')}</tbody>
+      <thead><tr><th>${isZh() ? '需要什么' : 'Needed'}</th><th style="text-align:right">${isZh() ? '现状' : 'Status'}</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td style="color:#3b4552">${r[0]}</td><td class="w" style="text-align:right">${r[r.length - 1]}</td></tr>`).join('')}</tbody>
     </table>`;
   return pageHead(eyebrow, title, sub, `<span class="tag amber">${isZh() ? '暂无数据' : 'No data'}</span>`)
     + `<section class="panel"><div class="panel-b" style="padding:0">
@@ -898,8 +898,8 @@ function viewOverview() {
     ['A1', isZh() ? '新闻代理' : 'News', 'news-main · Streamlit', isZh() ? '无 HTTP 接口' : 'no HTTP API', LIVE.news ? ok : no],
     ['A2', isZh() ? '政治监控' : 'Political', 'political-monitor · FastAPI', isZh() ? '需 PostgreSQL + 采集' : 'needs PG', A2.live ? ok : no],
     ['A3', isZh() ? '执行代理' : 'Execution', 'ndxbots · CLI', isZh() ? '回测需五分钟数据' : 'needs 5-min bars', LIVE.bt ? ok : no],
-    ['A4', isZh() ? '风险控制' : 'Risk', '—', isZh() ? '未提供代码' : 'not provided', na],
-    ['A5', isZh() ? '指挥官' : 'Commander', '—', isZh() ? '未提供代码' : 'not provided', na]
+    ['A4', isZh() ? '风险控制' : 'Risk', isZh() ? '未提供代码' : 'not provided', na],
+    ['A5', isZh() ? '指挥官' : 'Commander', isZh() ? '未提供代码' : 'not provided', na]
   ];
   const rows = agents.map(a => `<div class="agent-row">
       <span class="agent-id">${a[0]}</span>
@@ -940,9 +940,9 @@ function viewOverview() {
 
 function viewBriefing() {
   return emptyPage('MORNING BRIEF / A5', t('page.briefing.t'), t('page.briefing.s'), [
-    [isZh() ? 'A5 指挥官产出的一份晨报（run 记录 + 四张意图）' : 'One A5 briefing run', 'AU Ka Chai (A5)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A4 风控闸门状态与当日干预记录' : 'A4 gate state and interventions', 'XU Yijia (A4)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A1/A3 的输入（事件簇、执行意图）' : 'A1/A3 inputs', 'XU Yijia / XU Jinrong', LIVE.news || LIVE.bt ? '<span class="tag green">部分就绪</span>' : '<span class="tag amber">未接入</span>']
+    [isZh() ? 'A5 指挥官产出的一份晨报（run 记录 + 四张意图）' : 'One A5 briefing run', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A4 风控闸门状态与当日干预记录' : 'A4 gate state and interventions', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A1/A3 的输入（事件簇、执行意图）' : 'A1/A3 inputs', LIVE.news || LIVE.bt ? '<span class="tag green">部分就绪</span>' : '<span class="tag amber">未接入</span>']
   ], isZh()
     ? '晨报由 A5 指挥官聚合 A1–A4 的产出生成。A5 目前没有可运行的代码，所以这里不放任何编造的摘要或推荐。'
     : 'The briefing is produced by A5 from A1–A4 output. A5 has no runnable code yet, so no summary is invented here.');
@@ -989,8 +989,8 @@ function liveNewsStats(items) {
 }
 function viewNews() {
   if (!LIVE.news) return emptyPage('NEWS INTELLIGENCE / A1', t('page.news.t'), t('page.news.s'), [
-    [isZh() ? 'A1 导出的新闻快照 <code>data/news.json</code>' : 'A1 snapshot <code>data/news.json</code>', 'XU Yijia (A1)', '<span class="tag amber">未导入</span>'],
-    [isZh() ? '或 A1 的只读 HTTP 接口' : 'or a read-only endpoint', 'XU Yijia (A1)', '<span class="tag outline">不存在</span>']
+    [isZh() ? 'A1 导出的新闻快照 <code>data/news.json</code>' : 'A1 snapshot <code>data/news.json</code>', '<span class="tag amber">未导入</span>'],
+    [isZh() ? '或 A1 的只读 HTTP 接口' : 'or a read-only endpoint', '<span class="tag outline">不存在</span>']
   ], isZh()
     ? '新闻来自 A1（news-main：Streamlit + SQLite）。它没有 HTTP 接口，所以先用 <code>tools/export.py</code> 把数据库导出成 JSON，或直接跑 <code>tools/api_server.py</code>。'
     : 'News lives in A1 (Streamlit + SQLite) with no HTTP API. Export it with <code>tools/export.py</code>, or run <code>tools/api_server.py</code>.');
@@ -1134,8 +1134,8 @@ function verTag(v) {
 
 function viewPolitical() {
   if (!A2.live) return emptyPage('POLITICAL MONITOR / A2', t('page.political.t'), t('page.political.s'), [
-    [isZh() ? '运行中的 A2 后端（FastAPI，默认 :8000）' : 'A2 backend on :8000', 'XU Yijia (A2)', '<span class="tag amber">未连接</span>'],
-    [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', 'XU Yijia (A2)', '<span class="tag amber">待运行</span>']
+    [isZh() ? '运行中的 A2 后端（FastAPI，默认 :8000）' : 'A2 backend on :8000', '<span class="tag amber">未连接</span>'],
+    [isZh() ? 'PostgreSQL 数据库 + 一次采集' : 'PostgreSQL + one collection run', '<span class="tag amber">待运行</span>']
   ], isZh()
     ? '这一页直接读 A2 的 <code>/api/v1/*</code>，不内置任何示例发言。启动后端后点右上角「连接设置」或按刷新即可。<br>启动方式：<code>python -X utf8 -m app</code>（在 political-monitor 目录）。'
     : "This page reads A2's <code>/api/v1/*</code> directly and ships no sample statements. Start the backend, then refresh.");
@@ -1290,11 +1290,11 @@ function btSource() {
 }
 function viewStrategy() {
   if (!LIVE.bt) return emptyPage('STRATEGY ENGINE / A3', t('page.strategy.t'), t('page.strategy.s'), [
-    [isZh() ? 'A3 导出的回测快照 <code>data/backtests.json</code>' : 'A3 snapshot <code>data/backtests.json</code>', 'XU Jinrong (A3)', '<span class="tag amber">未导入</span>'],
-    [isZh() ? '完整五分钟 K 线（回测必需）' : 'native 5-min bars', 'XU Jinrong (A3)', '<span class="tag outline">额度不足</span>']
+    [isZh() ? 'A3 导出的回测快照 <code>data/backtests.json</code>' : 'A3 snapshot <code>data/backtests.json</code>', '<span class="tag amber">未导入</span>'],
+    [isZh() ? '完整五分钟 K 线（回测必需）' : 'native 5-min bars', '<span class="tag outline">额度不足</span>']
   ], isZh()
-    ? '回测需要原生五分钟 K 线，富途接口按账号额度计费，一次完整回测远超现有额度。请 XU Jinrong 提供 <code>equity.csv</code>，或用 <code>tools/export.py backtest</code> 导出。'
-    : 'The backtest needs native 5-minute bars and exceeds the current quote quota. Ask XU Jinrong for <code>equity.csv</code>.');
+    ? '回测需要原生五分钟 K 线，富途接口按账号额度计费，一次完整回测远超现有额度。需要 A3 的 <code>equity.csv</code>，或用 <code>tools/export.py backtest</code> 导出。'
+    : 'The backtest needs native 5-minute bars and exceeds the current quote quota. A3 needs to provide <code>equity.csv</code>.');
   const live = LIVE.bt.items[0];
   const STRATS = [{
     id: 'MF', name: live.name || (isZh() ? '回测' : 'Backtest'), en: '', mkt: live.market || '',
@@ -1392,8 +1392,8 @@ function viewStrategy() {
 /* ============================ risk ============================ */
 function viewRisk() {
   return emptyPage('RISK CONTROL / A4', t('page.risk.t'), t('page.risk.s'), [
-    [isZh() ? 'A4 风控引擎（限额表、否决记录、熔断状态）' : 'A4 risk engine', 'XU Yijia (A4)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A3 的实时执行意图（风控的输入）' : 'A3 intents (the input)', 'XU Jinrong (A3)', '<span class="tag amber">未接入</span>']
+    [isZh() ? 'A4 风控引擎（限额表、否决记录、熔断状态）' : 'A4 risk engine', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A3 的实时执行意图（风控的输入）' : 'A3 intents (the input)', '<span class="tag amber">未接入</span>']
   ], isZh()
     ? '风控闸门的每一条限额、每一次否决，都必须来自真实的风控引擎。A4 目前没有可运行的代码，这里不放任何编造的限额或否决记录。'
     : 'Every limit and every veto must come from a real risk engine. A4 has no runnable code, so nothing is invented here.');
@@ -1406,8 +1406,8 @@ function chatInit() {
 }
 function viewChat() {
   return emptyPage('COMMANDER / A5', t('page.chat.t'), t('page.chat.s'), [
-    [isZh() ? 'A5 指挥官对话接口（含证据链）' : 'A5 commander endpoint', 'AU Ka Chai (A5)', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
-    [isZh() ? 'A1–A4 的产出作为上下文' : 'A1–A4 output as context', '—', '<span class="tag amber">未接入</span>']
+    [isZh() ? 'A5 指挥官对话接口（含证据链）' : 'A5 commander endpoint', '<span class="tag outline">' + (isZh() ? '未提供代码' : 'no code') + '</span>'],
+    [isZh() ? 'A1–A4 的产出作为上下文' : 'A1–A4 output as context', '<span class="tag amber">未接入</span>']
   ], isZh()
     ? '对话的每一句回答都必须能追溯到真实来源。没有 A5 与 A1–A4 的接入，这里不会用预设答案冒充 AI 回复。'
     : 'Every answer must trace back to real sources. Without A5 and A1–A4 connected, no canned replies are shown.');
@@ -1470,8 +1470,8 @@ function a5Reply(q) {
 /* ============================ portfolio ============================ */
 function viewPortfolio() {
   return emptyPage('PORTFOLIO / F-09', t('page.portfolio.t'), t('page.portfolio.s'), [
-    [isZh() ? '模拟账户持仓与成交记录' : 'Simulated positions and fills', 'XU Jinrong (A3)', '<span class="tag amber">未接入</span>'],
-    [isZh() ? '或券商沙盒账户（Futu SIMULATE）' : 'or a broker sandbox account', '—', '<span class="tag outline">未绑定</span>']
+    [isZh() ? '模拟账户持仓与成交记录' : 'Simulated positions and fills', '<span class="tag amber">未接入</span>'],
+    [isZh() ? '或券商沙盒账户（Futu SIMULATE）' : 'or a broker sandbox account', '<span class="tag outline">未绑定</span>']
   ], isZh()
     ? '持仓与盈亏必须来自真实账户或模拟撮合。没有接入之前，这里不放虚构的持仓表。'
     : 'Positions and P&L must come from a real or simulated account. Nothing is fabricated here.');
