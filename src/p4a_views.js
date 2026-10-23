@@ -181,12 +181,58 @@ function viewBriefing() {
 function topicBars() {
   if (LIVE.news) {
     const c = {};
-    LIVE.news.items.forEach(x => { const k = x.topic || (isZh() ? '未分类' : 'Uncategorised'); c[k] = (c[k] || 0) + 1; });
+    LIVE.news.items.forEach(x => { const k = topicLabel(x.topic); c[k] = (c[k] || 0) + 1; });
     return Object.keys(c).map(k => [k, c[k]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
   }
   return [[isZh() ? 'AI 资本开支' : 'AI capex', 9], [isZh() ? '利率路径' : 'Rate path', 7],
           [isZh() ? '出口管制' : 'Export controls', 5], [isZh() ? '资金流' : 'Fund flows', 4],
           [isZh() ? '能源' : 'Energy', 3]];
+}
+// 把 LLM 吐出的英文下划线主题（regulatory_governance_notice）转成短中文标签，
+// 已经是中文的就截断到合理长度。用于主题热度条 + 新闻列表标签。
+const TOPIC_CN = {
+  'regulatory_governance_notice': '监管治理',
+  'regulatory_roundtable_announcement': '监管圆桌',
+  'regulatory': '监管',
+  'earnings_deterioration_and_job_cuts': '业绩恶化/裁员',
+  'earnings_deterioration': '业绩恶化',
+  'quarterly_earnings_beat': '财报超预期',
+  'earnings_release': '财报发布',
+  'earnings': '财报',
+  'market_summary': '市场综述',
+  'macro_policy_commentary': '宏观政策',
+  'macro_policy': '宏观政策',
+  'official_announcement': '官方公告',
+  'capacity_expansion': '产能扩张',
+  'research_view': '研究观点',
+  'executive_visit': '高管出访',
+  'international_business_development': '国际业务',
+  'international_business': '国际业务',
+  'international_markets': '国际市场',
+  'ai': 'AI'
+};
+function topicLabel(raw) {
+  if (!raw) return isZh() ? '未分类' : 'Uncategorised';
+  const s = String(raw).trim();
+  // 已经是中文（含斜杠分隔的复合）→ 截断
+  if (/[\u4e00-\u9fff]/.test(s)) {
+    return s.length > 10 ? s.slice(0, 10) + '…' : s;
+  }
+  const key = s.toLowerCase();
+  // 精确匹配完整串
+  if (TOPIC_CN[key]) return TOPIC_CN[key];
+  // 复合（含 / 或空格）→ 逐段匹配，取第一个命中的
+  const parts = s.split(/[\/\s]+/).filter(Boolean);
+  for (const p of parts) {
+    if (TOPIC_CN[p.toLowerCase()]) return TOPIC_CN[p.toLowerCase()];
+  }
+  // 单段英文 → 去掉下划线取首词再匹配
+  const first = s.split(/[\/\s]+/)[0] || '';
+  const seg = first.split('_')[0];
+  if (TOPIC_CN[seg]) return TOPIC_CN[seg];
+  // 兜底：去掉下划线、首字母大写，截断
+  const cleaned = s.replace(/[_-]+/g, ' ');
+  return cleaned.length > 12 ? cleaned.slice(0, 12) + '…' : cleaned;
 }
 function newsItems() {
   if (!LIVE.news) return D.events;
@@ -195,7 +241,7 @@ function newsItems() {
     time: x.published_at ? fmtTime(x.published_at, false) : '',
     srcCount: 1,
     sentiment: (x.sentiment === 'pos' || x.sentiment === 'neg') ? x.sentiment : 'neu',
-    topic: x.topic || (isZh() ? '未分类' : 'Uncategorised'),
+    topic: topicLabel(x.topic),
     title: x.title || (isZh() ? '（无标题）' : '(untitled)'),
     summary: x.summary || x.reasoning || '',
     tags: (x.tickers || []).slice(0, 4),
@@ -213,7 +259,7 @@ function liveNewsStats(items) {
   return `<div class="stats">
     <div class="stat"><div class="k">${isZh() ? '条目' : 'Items'}</div><div class="v">${items.length}</div><div class="d">${isZh() ? '已分析 ' + items.filter(x => x.analyzed).length + ' 条 · ' : ''}${esc(src)}</div></div>
     <div class="stat"><div class="k">${isZh() ? '平均置信度' : 'Mean confidence'}</div><div class="v">${avg === null ? '—' : (avg * 100).toFixed(0) + '<small>%</small>'}</div><div class="d">${isZh() ? '由 A1 分析器给出' : 'from the A1 analyser'}</div></div>
-    <div class="stat"><div class="k">${isZh() ? '情绪分布' : 'Sentiment'}</div><div class="v" style="font-size:17px;letter-spacing:1px"><span class="up">${c.pos}</span> / <span style="color:#8a929f">${c.neu}</span> / <span class="down">${c.neg}</span></div><div class="d">${isZh() ? '利多 / 中性 / 利空' : 'bull / neutral / bear'}</div></div>
+    <div class="stat"><div class="k">${isZh() ? '情绪分布' : 'Sentiment'}</div><div class="v"><span class="up">${c.pos}</span><span style="color:#c3cad4"> / </span><span style="color:#8a929f">${c.neu}</span><span style="color:#c3cad4"> / </span><span class="down">${c.neg}</span></div><div class="d">${isZh() ? '利多 / 中性 / 利空' : 'bull / neutral / bear'}</div></div>
     <div class="stat"><div class="k">${isZh() ? '快照时间' : 'Snapshot'}</div><div class="v" style="font-size:17px">${esc((LIVE.news.generated_at || '').slice(5, 10).replace('-', '/'))}</div><div class="d">${isZh() ? '静态导出，非实时' : 'static export, not live'}</div></div>
   </div>`;
 }
@@ -293,10 +339,10 @@ function viewNews() {
              ${(() => {
       const bars = topicBars();
       const max = Math.max.apply(null, bars.map(b => b[1])) || 1;
-      return bars.map(([k, v]) => `<div style="display:grid;grid-template-columns:82px 1fr 20px;gap:10px;align-items:center;padding:4px 0">
-        <span style="font-size:11px;color:#67707d">${esc(k)}</span>
-        <span class="bar" style="height:4px"><i style="width:${(v / max * 100).toFixed(0)}%;background:#3b4552"></i></span>
-        <span class="num" style="font-size:10px;text-align:right;color:#7b8492">${v}</span></div>`).join('');
+      return bars.map(([k, v]) => `<div style="display:grid;grid-template-columns:1fr 74px 24px;gap:12px;align-items:center;padding:5px 0">
+        <span class="bar" style="height:5px"><i style="width:${(v / max * 100).toFixed(0)}%;background:#3b4552"></i></span>
+        <span style="font-size:11px;color:#67707d;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(k)}</span>
+        <span class="num" style="font-size:11px;text-align:right;color:#7b8492">${v}</span></div>`).join('');
     })()}
            </div>
          </section>

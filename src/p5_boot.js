@@ -445,7 +445,7 @@ function setLang(l, silent) {
 }
 function initLang() {
   const saved = lsGet('pq_lang');
-  const lm = (location.search.match(/[?&]lang=(zh|hant|en)/) || [])[1] || saved || 'zh';
+  const lm = (location.search.match(/[?&]lang=(zh|hant|en)/) || [])[1] || saved || 'hant';
   setLang(lm, true);
   ['zh', 'hant', 'en'].forEach(k => {
     const b = document.getElementById('lang-' + k);
