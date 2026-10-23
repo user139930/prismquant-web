@@ -1,5 +1,10 @@
 # PrismQuant · 棱镜量化 — Web Client
 
+**English** · [繁體中文](README.zh.md)
+
+> 中文版完整說明（含架構、已知不足、未來優化）：**[README.zh.md](README.zh.md)**
+> 本文件為英文版，供課程報告與 GitHub 展示使用。
+
 Front-end for **PrismQuant**, a multi-market, medium-to-low-frequency quantitative
 research and multi-agent decision platform.
 
