@@ -194,6 +194,21 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 
 「空狀態」不是一片空白，是一張表：**需要什麼 / 誰提供 / 現狀**。
 
+## 本機實跑記錄（2026-10-23）
+
+政要監控這一頁不是示意，是當天真跑出來的：
+
+| 步驟 | 結果 |
+|---|---|
+| PostgreSQL 18 建叢集 | `prismquant_political`，9 張表，alembic 升到 `0008_history_import` |
+| 種子 | 2 位人物（拉加德、特朗普）、2 個來源（ECB 新聞 RSS、Trump's Truth 歸檔 RSS） |
+| 採集 | 實際抓取並寫入：ECB「IMFC Statement」（官方頁面歸屬）、2 條 Trump 歸檔貼文 |
+| API | `python -X utf8 -m app` 跑在 `:8000`，`/health`、`/people`、`/public-records` 全部 200 |
+| 前端 | 從 `localhost:5173` 加 `?api=http://127.0.0.1:8000` 連上，畫面上就是這三條 |
+
+**注意**：GitHub Pages 上連不到 `127.0.0.1:8000`，所以線上版這一頁仍是空狀態。
+要看到上面那張截圖，必須在本機同時開著 PostgreSQL 與 API。
+
 ## 已知不足
 
 1. **九頁裡有五頁目前是空的**：A1 要一次採集導出、A2 要啟動後端並跑採集、

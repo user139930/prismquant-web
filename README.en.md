@@ -145,6 +145,21 @@ state that names what is missing — no invented NAV, positions, limits or headl
 | Portfolio | simulated account | empty state |
 | Academy | four articles (authored content) | — |
 
+## What was actually run (2026-10-23)
+
+The political-watch page is not a mock-up. On this date, end to end:
+
+| Step | Result |
+|---|---|
+| PostgreSQL 18 cluster | `prismquant_political`, 9 tables, alembic at `0008_history_import` |
+| Seeds | 2 people (Lagarde, Trump), 2 sources (ECB press RSS, Trump's Truth archive RSS) |
+| Collection | Real records written: ECB "IMFC Statement" (verified page attribution) and two archived Trump posts |
+| API | `python -X utf8 -m app` on `:8000`; `/health`, `/people`, `/public-records` all 200 |
+| Client | Served from `localhost:5173` with `?api=http://127.0.0.1:8000` — the screenshot shows those records |
+
+Note: GitHub Pages cannot reach `127.0.0.1:8000`, so the hosted build still shows the
+empty state on that page. The screenshot requires the local stack to be running.
+
 ## Known gaps
 
 1. **Five of the nine pages are empty right now**: A1 needs one collection export,
