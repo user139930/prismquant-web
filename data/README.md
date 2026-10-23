@@ -18,3 +18,14 @@
 - `file://` 直接開 `index.html` 時，瀏覽器會阻擋 `fetch`，所以只能用示例數據。
   走 `http(s)`（本機伺服器或 GitHub Pages）才會載入快照。
 - 匯出腳本只讀不寫來源檔案；`--report` 模式會印出資料庫結構，先跑一次再匯出比較穩。
+
+## 另一條路：本機 API
+
+不想每次手動匯出，可以直接跑：
+
+```bash
+python tools/api_server.py --news-db "<...>/news.sqlite3" --curve "<...>/curve.csv"
+```
+
+它會在同一個網址同時提供前端與動態的 `/data/*.json`（每次請求重讀來源），
+所以 `data/` 裡不需要放任何檔案，前端會直接拿到真數據。

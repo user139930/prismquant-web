@@ -146,6 +146,26 @@ python tools/export.py backtest --curve "C://...//ndxbots//out//curve.csv" --out
 為什麼用快照而不是即時：GitHub Pages 是純靜態，跑不了 Python。快照讓線上版也能顯示
 真數據，代價是要手動更新一次。要即時，就得由 A1 / A3 自己開 HTTP 端點。
 
+### 選項 B：本機 API（即時，不用匯出）
+
+如果檔案就在你要示範的那台機器上，跑這一行就好：
+
+```bash
+python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.csv"
+# 打開 http://localhost:8020/
+```
+
+它同時做三件事：
+
+1. 把前端跑起來（靜態伺服器）
+2. 把 `/data/news.json`、`/data/backtests.json` **動態生成**——每次請求都重讀資料庫／CSV
+3. 開兩個正式端點：`GET /api/v1/news/events?limit=60`、`GET /api/v1/strategy/backtests`
+
+**前端一行都不用改**，打開就是真數據，按刷新就是最新。**零依賴**，只用 Python 標準庫，
+不用裝 FastAPI。
+
+前提：資料庫和 CSV 必須在跑這個 server 的那台機器上。
+
 **刷新行為**
 
 | 頁面 | 按右上角「刷新」會做什麼 |

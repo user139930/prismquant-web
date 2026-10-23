@@ -160,6 +160,20 @@ With the files present the news page shows an "A1 snapshot" badge and the strate
 shows an "A3 backtest" badge, both with a generation timestamp. Without them the client
 falls back to the fixtures and says so. `file://` cannot fetch them — serve over http(s).
 
+### Option B: local API (live, no export step)
+
+If the source files are on the machine running the demo:
+
+```bash
+python tools/api_server.py --news-db "<...>/news.sqlite3" --curve "<...>/curve.csv"
+# open http://localhost:8020/
+```
+
+It serves the client, generates `/data/news.json` and `/data/backtests.json` on every
+request from the live sources, and exposes `GET /api/v1/news/events` plus
+`GET /api/v1/strategy/backtests`. No frontend changes, no dependencies — standard
+library only.
+
 **Refresh behaviour**
 
 | Page | What the refresh button does |
