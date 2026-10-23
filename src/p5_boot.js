@@ -90,10 +90,9 @@ async function loadPeople() {
   } catch (e) { A2.peopleErr = e.message; }
   refreshPolDom();
 }
-async function loadRecords(append) {
+async function loadRecords(append, quiet) {
   const rid = ++A2.reqId;
-  A2.loading = true; A2.err = null;
-  refreshPolDom();
+  if (!quiet) { A2.loading = true; A2.err = null; refreshPolDom(); }
   try {
     const params = { limit: 20, order: 'published_desc' };
     if (A2.sel) params.person_id = A2.sel;
@@ -164,13 +163,53 @@ function render() {
   window.scrollTo(0, 0);
 }
 
+/* ============================ refresh ============================ */
+async function hardRefresh() {
+  const route = routeName();
+  if (route === 'news' || route === 'strategy') {
+    const before = (LIVE.news && LIVE.news.generated_at) || (LIVE.bt && LIVE.bt.generated_at) || '';
+    const got = await loadSnapshots(true);
+    render();
+    if (!got) {
+      toast(isZh() ? '没有可读取的快照，仍是示例数据' : 'No snapshot found, still sample data');
+      return;
+    }
+    const after = (LIVE.news && LIVE.news.generated_at) || (LIVE.bt && LIVE.bt.generated_at) || '';
+    if (after && after !== before) {
+      toast((isZh() ? '已更新到 ' : 'Updated to ') + after.slice(0, 16).replace('T', ' '));
+    } else {
+      toast(isZh() ? '没有新数据（快照 ' + after.slice(0, 10) + '）' : 'No new data (snapshot ' + after.slice(0, 10) + ')');
+    }
+    return;
+  }
+  if (route === 'political') {
+    if (!A2.live) { probe(); toast(isZh() ? '正在尝试连接后端…' : 'Probing backend…'); return; }
+    await Promise.all([loadSys(), loadRecords(false, true)]);
+    toast(isZh() ? '已重新读取后端数据' : 'Re-read from the backend');
+    return;
+  }
+  render();
+  toast(isZh() ? '已重新渲染（本页为示例数据）' : 'Re-rendered (sample data)');
+}
+let pollTimer = null;
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(() => {
+    if (document.hidden) return;
+    if (routeName() !== 'political') return;
+    if (!A2.live || A2.loading) return;
+    loadSys();
+    loadRecords(false, true);
+  }, 60000);
+}
+
 /* ============================ events ============================ */
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act],[data-person],[data-rec],[data-strat],[data-news],[data-article],[data-ask]');
   if (!el) return;
   const act = el.getAttribute('data-act');
   if (act) {
-    if (act === 'refresh') { toast(isZh() ? '已刷新（演示数据不变）' : 'Refreshed (sample data)'); render(); }
+    if (act === 'refresh') { hardRefresh(); }
     else if (act === 'confirm') { toast(isZh() ? '已确认 3 张意图，进入模拟撮合队列' : '3 intents confirmed into the simulated queue'); }
     else if (act === 'pause') { toast(isZh() ? '已暂停新开仓（模拟）· 持仓保留' : 'New entries paused (simulated); positions kept'); }
     else if (act === 'flatten') { toast(isZh() ? '紧急平仓需二次确认；演示环境未发送任何委托' : 'Flatten requires confirmation; nothing routed in demo'); }
@@ -399,6 +438,7 @@ function initLang() {
   render();
   setConn(A2.checked ? 'demo' : 'demo');
   probe();
+  startPolling();
   loadSnapshots().then(changed => {
     if (changed && (routeName() === 'news' || routeName() === 'strategy')) render();
   });

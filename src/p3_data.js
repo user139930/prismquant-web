@@ -347,17 +347,19 @@ const D = {
    read them instead of the fixtures. Missing files = fixtures, no error.
 */
 const LIVE = { news: null, bt: null };
-async function loadSnapshots() {
+async function loadSnapshots(force) {
+  const bust = force ? ('?t=' + Date.now()) : '';
   const grab = async p => {
     try {
-      const r = await fetch(p, { cache: 'no-store' });
+      const r = await fetch(p + bust, { cache: 'no-store' });
       if (!r.ok) return null;
       return await r.json();
     } catch (e) { return null; }
   };
   const [n, b] = await Promise.all([grab('./data/news.json'), grab('./data/backtests.json')]);
-  if (n && Array.isArray(n.items) && n.items.length) LIVE.news = n;
-  if (b && Array.isArray(b.items) && b.items.length) LIVE.bt = b;
-  return !!(LIVE.news || LIVE.bt);
+  let got = false;
+  if (n && Array.isArray(n.items) && n.items.length) { LIVE.news = n; got = true; }
+  if (b && Array.isArray(b.items) && b.items.length) { LIVE.bt = b; got = true; }
+  return got;
 }
 </script>

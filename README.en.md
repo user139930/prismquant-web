@@ -160,6 +160,17 @@ With the files present the news page shows an "A1 snapshot" badge and the strate
 shows an "A3 backtest" badge, both with a generation timestamp. Without them the client
 falls back to the fixtures and says so. `file://` cannot fetch them — serve over http(s).
 
+**Refresh behaviour**
+
+| Page | What the refresh button does |
+|---|---|
+| News / Strategy | Re-fetches `data/*.json` with a cache-buster. Reports "updated to …" if the file changed, "no new data" otherwise |
+| Political watch | Re-reads `/api/v1/*`; also polls every 60 s while the tab is visible |
+| Other pages | Re-render only (sample data does not change) |
+
+Refresh can only re-read data that already exists. For A1/A3 to produce new data someone
+still has to re-export and commit — that is a static-hosting limit, not a button problem.
+
 ## Known gaps
 
 1. **A1 and A3 have no HTTP API.** An export path exists (`tools/export.py`), but it
