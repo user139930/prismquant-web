@@ -1696,6 +1696,7 @@ function setConn(kind) {
     }
   }
 }
+let NEWS_API = 'http://127.0.0.1:8020';
 function apiUrl(p) { return (A2.base || '') + p; }
 async function apiGet(path, params, signal) {
   const q = new URLSearchParams();
@@ -1742,6 +1743,38 @@ async function apiPost(path, body) {
     if (e instanceof TypeError) throw new Error(isZh() ? '无法连接后端' : 'Cannot reach backend.');
     throw e;
   } finally { clearTimeout(timer); }
+}
+async function collectNews() {
+  // Trigger a real RSS collection run in A1, then reload news from its API.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 150000);
+  try {
+    const res = await fetch(NEWS_API + '/api/v1/news/collect', {
+      method: 'POST', headers: { Accept: 'application/json' }, signal: ctrl.signal
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    const rep = d.report || {};
+    const saved = (rep.added || 0) + (rep.updated || 0);
+    const dup = rep.duplicates || 0;
+    const analysed = (rep.analysis && rep.analysis.analyzed) || 0;
+    return { ok: true, saved, dup, analysed, report: rep };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  } finally { clearTimeout(timer); }
+}
+async function loadNewsFromApi() {
+  // Read news straight from the A1 API (live), returns null if unreachable.
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(NEWS_API + '/api/v1/news/events?limit=60', { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (d && Array.isArray(d.items) && d.items.length) { LIVE.news = d; return d; }
+    return null;
+  } catch (e) { return null; }
 }
 async function probe() {
   A2.checking = true;
@@ -1859,15 +1892,41 @@ function render() {
 /* ============================ refresh ============================ */
 async function hardRefresh() {
   const route = routeName();
-  if (route === 'news' || route === 'strategy') {
-    const before = (LIVE.news && LIVE.news.generated_at) || (LIVE.bt && LIVE.bt.generated_at) || '';
+  if (route === 'news') {
+    // Try a live collect+read from the A1 API first, fall back to snapshot.
+    toast(isZh() ? '正在采集新闻（抓取 RSS）…' : 'Collecting news (fetching RSS)…');
+    const col = await collectNews();
+    if (col.ok) {
+      const live = await loadNewsFromApi();
+      if (live) {
+        render();
+        if (col.saved > 0) {
+          toast(isZh() ? ('采集到 ' + col.saved + ' 条新内容' + (col.analysed ? '，已分析 ' + col.analysed + ' 条' : '') + '，已刷新') : ('Collected ' + col.saved + ' new items' + (col.analysed ? ', ' + col.analysed + ' analysed' : '')));
+        } else {
+          toast(isZh() ? ('采集完成，本次无新内容（已存在 ' + col.dup + ' 条）') : ('Collected, no new items (' + col.dup + ' already present)'));
+        }
+        return;
+      }
+    }
+    // A1 API unavailable → snapshot fallback
+    const before = (LIVE.news && LIVE.news.generated_at) || '';
     const got = await loadSnapshots(true);
     render();
-    if (!got) {
-      toast(isZh() ? '没有可读取的快照，仍是示例数据' : 'No snapshot found, still sample data');
-      return;
+    if (!got) { toast(isZh() ? '没有可读取的数据' : 'No data available'); return; }
+    const after = (LIVE.news && LIVE.news.generated_at) || '';
+    if (after && after !== before) {
+      toast((isZh() ? '已更新到 ' : 'Updated to ') + after.slice(0, 16).replace('T', ' '));
+    } else {
+      toast(isZh() ? '没有新数据（快照 ' + after.slice(0, 10) + '，A1 服务未运行）' : 'No new data (snapshot ' + after.slice(0, 10) + ', A1 API not running)');
     }
-    const after = (LIVE.news && LIVE.news.generated_at) || (LIVE.bt && LIVE.bt.generated_at) || '';
+    return;
+  }
+  if (route === 'strategy') {
+    const before = (LIVE.bt && LIVE.bt.generated_at) || '';
+    const got = await loadSnapshots(true);
+    render();
+    if (!got) { toast(isZh() ? '没有可读取的数据' : 'No data available'); return; }
+    const after = (LIVE.bt && LIVE.bt.generated_at) || '';
     if (after && after !== before) {
       toast((isZh() ? '已更新到 ' : 'Updated to ') + after.slice(0, 16).replace('T', ' '));
     } else {
@@ -2134,6 +2193,19 @@ function initLang() {
         lsSet('pq_api_base', A2.base);
       }
     } catch (e) { /* ignore malformed override */ }
+  }
+  const nm = (location.search.match(/[?&]news_api=([^&]+)/) || [])[1];
+  if (nm) {
+    try {
+      const u = new URL(decodeURIComponent(nm));
+      if (['http:', 'https:'].includes(u.protocol)) {
+        NEWS_API = u.origin;
+        lsSet('pq_news_api', NEWS_API);
+      }
+    } catch (e) { /* ignore malformed override */ }
+  } else {
+    const savedNews = lsGet('pq_news_api');
+    if (savedNews) NEWS_API = savedNews;
   }
   renderTicker();
   initSettings();

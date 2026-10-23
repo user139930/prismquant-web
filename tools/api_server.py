@@ -22,6 +22,7 @@ data in the client.
 import argparse
 import json
 import os
+import subprocess
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
@@ -30,7 +31,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pqdata  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG = {"news_db": None, "curve": None, "benchmark": None, "limit": 60}
+CONFIG = {"news_db": None, "curve": None, "benchmark": None, "limit": 60,
+          "news_dir": None, "news_python": None, "collect_per_source": 3,
+          "collect_analyze": False}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -58,9 +61,55 @@ class Handler(SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Accept, Content-Type")
         self.end_headers()
+
+    def do_POST(self):
+        url = urlparse(self.path)
+        if url.path == "/api/v1/news/collect":
+            return self._collect()
+        return self._fail("未知的 POST 路徑", 404)
+
+    def _collect(self):
+        """Trigger one RSS collection run in news-main (subprocess), then read back."""
+        if not (CONFIG["news_dir"] and CONFIG["news_python"]):
+            return self._fail("未提供 --news-dir / --news-python，無法觸發採集", 503)
+        if not os.path.isdir(CONFIG["news_dir"]):
+            return self._fail("news 目錄不存在：%s" % CONFIG["news_dir"], 503)
+        cmd = [CONFIG["news_python"], "-m", "src.rss_pipeline",
+               "--limit-per-source", str(CONFIG["collect_per_source"])]
+        if CONFIG["collect_analyze"]:
+            cmd.append("--analyze")
+        try:
+            proc = subprocess.run(
+                cmd, cwd=CONFIG["news_dir"], capture_output=True, text=True,
+                timeout=120, encoding="utf-8", errors="replace")
+        except subprocess.TimeoutExpired:
+            return self._fail("採集超時（>120 秒）；已抓到的內容可能已寫入資料庫，請重新讀取", 504)
+        except Exception as exc:
+            return self._fail("觸發採集失敗：%s" % exc)
+        report = {}
+        out = proc.stdout or ""
+        try:
+            report = json.loads(out.strip())
+        except Exception:
+            # stdout may carry leading log lines; grab the last balanced JSON object.
+            try:
+                report = json.loads(out[out.rfind("{"):].strip())
+            except Exception:
+                report = {"raw": out[-2000:]}
+        if proc.returncode not in (0,):
+            report["exit_code"] = proc.returncode
+            report.setdefault("stderr", (proc.stderr or "")[-500:])
+        # read back what the DB now has
+        try:
+            payload = pqdata.news_payload(CONFIG["news_db"], CONFIG["limit"])
+            report["now"] = {"count": payload["count"], "analysed": payload["analysed"]}
+        except Exception:
+            pass
+        return self._json({"collected_at": __import__("datetime").datetime.now().isoformat(),
+                           "report": report})
 
     def do_GET(self):
         url = urlparse(self.path)
@@ -111,12 +160,20 @@ def main():
     ap.add_argument("--limit", type=int, default=60)
     ap.add_argument("--port", type=int, default=8020)
     ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--news-dir", default=None, help="news-main project dir (to trigger collection)")
+    ap.add_argument("--news-python", default=None, help="news-main venv python.exe (to trigger collection)")
+    ap.add_argument("--collect-per-source", type=int, default=3, help="items fetched per source per collection")
+    ap.add_argument("--collect-analyze", action="store_true", help="run LLM analysis after collection")
     args = ap.parse_args()
 
     CONFIG["news_db"] = args.news_db
     CONFIG["curve"] = args.curve
     CONFIG["benchmark"] = args.benchmark
     CONFIG["limit"] = args.limit
+    CONFIG["news_dir"] = args.news_dir
+    CONFIG["news_python"] = args.news_python
+    CONFIG["collect_per_source"] = args.collect_per_source
+    CONFIG["collect_analyze"] = args.collect_analyze
 
     if args.news_db and not os.path.exists(args.news_db):
         print("WARNING: news db not found: %s" % args.news_db, file=sys.stderr)
@@ -129,6 +186,8 @@ def main():
     print("  --------------------")
     print("  news db : %s" % (args.news_db or "(not set - sample data)"))
     print("  curve   : %s" % (args.curve or "(not set - sample data)"))
+    if args.news_dir and args.news_python:
+        print("  collect : POST /api/v1/news/collect  (fetch RSS from news-main)")
     print("")
     print("  open    : %s" % url)
     print("  api     : %sapi/v1/news/events?limit=5" % url)

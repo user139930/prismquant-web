@@ -6,10 +6,11 @@ PrismQuant one-click launcher (Python, encoding-safe).
 Double-click `start-all.cmd` (which just calls this) OR run:
     python start-all.py
 
-It does three things, in order:
+It does four things, in order:
   1. make sure PostgreSQL is running (tries to start it if not)
   2. start the A2 backend in its own console window (so it keeps running)
-  3. serve this folder and open the browser already pointed at the API
+  3. start the A1 news service (live read + RSS collection trigger)
+  4. serve this folder and open the browser already pointed at both APIs
 
 Keep the launcher window open while you use the app.
 """
@@ -29,6 +30,15 @@ A2_PY = os.path.join(A2_DIR, ".venv", "Scripts", "python.exe")
 API = "http://127.0.0.1:8000"
 PORT = 5173
 PG_SERVICE = "postgresql-x64-18"
+
+# A1 news collection service (api_server.py). It reads news.sqlite3 live and
+# triggers a real RSS fetch via news-main's venv on POST /api/v1/news/collect.
+A1_DIR = r"C:\Users\Admin\Downloads\news-main\news-main"
+A1_PY = os.path.join(A1_DIR, ".venv", "Scripts", "python.exe")
+A1_DB = os.path.join(A1_DIR, "data", "news.sqlite3")
+A1_PORT = 8020
+A1_API = "http://127.0.0.1:%d" % A1_PORT
+PY = r"C:\Users\Admin\.workbuddy\binaries\python\versions\3.13.12\python.exe"
 
 def log(msg):
     print("   " + msg, flush=True)
@@ -71,7 +81,7 @@ def main():
         log("running." if pg_running() else "[WARN] could not start PostgreSQL.")
 
     # 2. A2 backend ------------------------------------------------------
-    print("   [2/3] Starting A2 backend ...")
+    print("   [2/4] Starting A2 backend ...")
     if not os.path.exists(A2_PY):
         log("[ERROR] A2 venv not found at:")
         log("        " + A2_PY)
@@ -94,10 +104,31 @@ def main():
             time.sleep(1)
         log("A2 is up at " + API if up else "[WARN] A2 did not respond in 30s.")
 
-    # 3. frontend --------------------------------------------------------
-    print("   [3/3] Serving frontend at http://localhost:%d" % PORT)
+    # 3. A1 news collection service --------------------------------------
+    print("   [3/4] Starting A1 news service ...")
+    if not (os.path.exists(A1_PY) and os.path.exists(A1_DB)):
+        log("[WARN] A1 not found at %s (news page will use snapshot)" % A1_DIR)
+    else:
+        NEW_CONSOLE = 0x00000010
+        api_server = os.path.join(HERE, "tools", "api_server.py")
+        subprocess.Popen(
+            [PY, api_server, "--news-db", A1_DB, "--news-dir", A1_DIR,
+             "--news-python", A1_PY, "--port", str(A1_PORT)],
+            cwd=HERE, creationflags=NEW_CONSOLE,
+        )
+        log("waiting for A1 news service ...")
+        up = False
+        for _ in range(15):
+            if api_ready(A1_API + "/healthz"):
+                up = True
+                break
+            time.sleep(1)
+        log("A1 news service up at " + A1_API if up else "[WARN] A1 service did not respond in 15s.")
+
+    # 4. frontend --------------------------------------------------------
+    print("   [4/4] Serving frontend at http://localhost:%d" % PORT)
     print()
-    url = "http://localhost:%d/index.html?api=%s" % (PORT, API)
+    url = "http://localhost:%d/index.html?api=%s&news_api=%s" % (PORT, API, A1_API)
     print("   Opening browser ... if it does not open, visit:")
     print("     " + url)
     print()
