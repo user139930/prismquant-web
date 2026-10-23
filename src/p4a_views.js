@@ -198,9 +198,48 @@ function viewBriefing() {
 
 /* ============================ news ============================ */
 let NEWS_FILTER = 'all';
+function topicBars() {
+  if (LIVE.news) {
+    const c = {};
+    LIVE.news.items.forEach(x => { const k = x.topic || (isZh() ? '未分类' : 'Uncategorised'); c[k] = (c[k] || 0) + 1; });
+    return Object.keys(c).map(k => [k, c[k]]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }
+  return [[isZh() ? 'AI 资本开支' : 'AI capex', 9], [isZh() ? '利率路径' : 'Rate path', 7],
+          [isZh() ? '出口管制' : 'Export controls', 5], [isZh() ? '资金流' : 'Fund flows', 4],
+          [isZh() ? '能源' : 'Energy', 3]];
+}
+function newsItems() {
+  if (!LIVE.news) return D.events;
+  return LIVE.news.items.map((x, i) => ({
+    id: String(x.id || ('N-' + i)).slice(0, 12),
+    time: x.published_at ? fmtTime(x.published_at, false) : '',
+    srcCount: 1,
+    sentiment: (x.sentiment === 'pos' || x.sentiment === 'neg') ? x.sentiment : 'neu',
+    topic: x.topic || (isZh() ? '未分类' : 'Uncategorised'),
+    title: x.title || (isZh() ? '（无标题）' : '(untitled)'),
+    summary: x.summary || x.reasoning || '',
+    tags: (x.tickers || []).slice(0, 4),
+    sources: x.source ? [x.source] : [],
+    conf: typeof x.confidence === 'number' ? x.confidence : null
+  }));
+}
+function liveNewsStats(items) {
+  const c = { pos: 0, neg: 0, neu: 0 };
+  items.forEach(x => c[x.sentiment] = (c[x.sentiment] || 0) + 1);
+  const confs = items.map(x => x.conf).filter(v => typeof v === 'number');
+  const avg = confs.length ? (confs.reduce((a, b) => a + b, 0) / confs.length) : null;
+  const src = (LIVE.news.source || 'news.sqlite3');
+  return `<div class="stats">
+    <div class="stat"><div class="k">${isZh() ? '已分析条目' : 'Analysed items'}</div><div class="v">${items.length}</div><div class="d">${esc(src)}</div></div>
+    <div class="stat"><div class="k">${isZh() ? '平均置信度' : 'Mean confidence'}</div><div class="v">${avg === null ? '—' : (avg * 100).toFixed(0) + '<small>%</small>'}</div><div class="d">${isZh() ? '由 A1 分析器给出' : 'from the A1 analyser'}</div></div>
+    <div class="stat"><div class="k">${isZh() ? '情绪分布' : 'Sentiment'}</div><div class="v" style="font-size:17px;letter-spacing:1px"><span class="up">${c.pos}</span> / <span style="color:#8a929f">${c.neu}</span> / <span class="down">${c.neg}</span></div><div class="d">${isZh() ? '利多 / 中性 / 利空' : 'bull / neutral / bear'}</div></div>
+    <div class="stat"><div class="k">${isZh() ? '快照时间' : 'Snapshot'}</div><div class="v" style="font-size:17px">${esc((LIVE.news.generated_at || '').slice(5, 10).replace('-', '/'))}</div><div class="d">${isZh() ? '静态导出，非实时' : 'static export, not live'}</div></div>
+  </div>`;
+}
 function viewNews() {
-  const totalSrc = D.events.reduce((a, b) => a + b.srcCount, 0);
-  const list = D.events.filter(e => NEWS_FILTER === 'all' || e.sentiment === NEWS_FILTER).map((e, i) => {
+  const SRC = newsItems();
+  const totalSrc = SRC.reduce((a, b) => a + b.srcCount, 0);
+  const list = SRC.filter(e => NEWS_FILTER === 'all' || e.sentiment === NEWS_FILTER).map((e, i) => {
     const sents = { pos: ['red', isZh() ? '利多' : 'Bullish'], neg: ['green', isZh() ? '利空' : 'Bearish'], neu: ['', isZh() ? '中性' : 'Neutral'] }[e.sentiment];
     return `<details class="news-item" ${i === 0 ? 'open' : ''}>
       <summary>
@@ -227,15 +266,18 @@ function viewNews() {
   const chips = [['all', isZh() ? '全部' : 'All'], ['pos', isZh() ? '利多' : 'Bullish'], ['neg', isZh() ? '利空' : 'Bearish'], ['neu', isZh() ? '中性' : 'Neutral']]
     .map(([k, v]) => `<button class="chip ${NEWS_FILTER === k ? 'on' : ''}" data-news="${k}">${v}</button>`).join('');
 
+  const stamp = LIVE.news
+    ? `<span class="tag green">${isZh() ? 'A1 数据快照' : 'A1 snapshot'}</span><span class="stamp">${esc((LIVE.news.generated_at || '').slice(0, 16).replace('T', ' '))} UTC</span>`
+    : `<span class="stamp">06:00 → 08:00</span>`;
   return pageHead('NEWS INTELLIGENCE / A1', t('page.news.t'), t('page.news.s'),
-    `<span class="stamp">06:00 → 08:00</span><button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
-    + `<div class="stats">
+    stamp + `<button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
+    + (LIVE.news ? liveNewsStats(SRC) : `<div class="stats">
       <div class="stat"><div class="k">${isZh() ? '事件簇' : 'Event clusters'}</div><div class="v">6</div><div class="d">${isZh() ? '由 38 条原始新闻归并' : 'from 38 raw items'}</div></div>
       <div class="stat"><div class="k">${isZh() ? '去重率' : 'Dedup rate'}</div><div class="v">84.2<small>%</small></div><div class="d">${isZh() ? '相似度阈值 0.86' : 'threshold 0.86'}</div></div>
       <div class="stat"><div class="k">${isZh() ? '平均来源数' : 'Sources / cluster'}</div><div class="v">3.2</div><div class="d">${isZh() ? '最高 5（NVDA 数据中心）' : 'max 5'}</div></div>
       <div class="stat"><div class="k">${isZh() ? '情绪分布' : 'Sentiment'}</div><div class="v" style="font-size:17px;letter-spacing:1px"><span class="up">3</span> / <span style="color:#8a929f">1</span> / <span class="down">2</span></div><div class="d">${isZh() ? '利多 / 中性 / 利空' : 'bull / neutral / bear'}</div></div>
-     </div>
-     <div class="split c2">
+     </div>`)
+     + `<div class="split c2">
        <section class="panel">
          <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '事件簇' : 'Event clusters'}</h2><div class="right">${totalSrc} ${isZh() ? '条原始新闻' : 'raw items'}</div></div>
          <div class="filterbar">${chips}<span style="margin-left:auto;font-size:10px;color:#a9b0bb">${isZh() ? '按事件权重排序' : 'by event weight'}</span></div>
@@ -252,11 +294,14 @@ function viewNews() {
          <section class="panel">
            <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '主题热度' : 'Topic heat'}</h2><div class="right">${isZh() ? '今日' : 'today'}</div></div>
            <div class="panel-b">
-             ${[[isZh() ? 'AI 资本开支' : 'AI capex', 9], [isZh() ? '利率路径' : 'Rate path', 7], [isZh() ? '出口管制' : 'Export controls', 5], [isZh() ? '资金流' : 'Fund flows', 4], [isZh() ? '能源' : 'Energy', 3]]
-      .map(([k, v]) => `<div style="display:grid;grid-template-columns:82px 1fr 20px;gap:10px;align-items:center;padding:4px 0">
-        <span style="font-size:11px;color:#67707d">${k}</span>
-        <span class="bar" style="height:4px"><i style="width:${v / 9 * 100}%;background:#3b4552"></i></span>
-        <span class="num" style="font-size:10px;text-align:right;color:#7b8492">${v}</span></div>`).join('')}
+             ${(() => {
+      const bars = topicBars();
+      const max = Math.max.apply(null, bars.map(b => b[1])) || 1;
+      return bars.map(([k, v]) => `<div style="display:grid;grid-template-columns:82px 1fr 20px;gap:10px;align-items:center;padding:4px 0">
+        <span style="font-size:11px;color:#67707d">${esc(k)}</span>
+        <span class="bar" style="height:4px"><i style="width:${(v / max * 100).toFixed(0)}%;background:#3b4552"></i></span>
+        <span class="num" style="font-size:10px;text-align:right;color:#7b8492">${v}</span></div>`).join('');
+    })()}
            </div>
          </section>
          <section class="panel">

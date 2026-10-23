@@ -125,6 +125,27 @@ application.mount("/app", StaticFiles(directory=PROJECT_ROOT / "web", html=True)
 
 ---
 
+## 接上 A1 / A3（快照方式）
+
+A1 與 A3 沒有 HTTP 介面，但它們的資料可以匯出成 JSON，前端直接讀：
+
+```bash
+# 1. 先看資料庫裡有什麼（只印結構，不改任何東西）
+python tools/export.py news --db "C://...//news-main//data//news.sqlite3" --report
+
+# 2. 匯出新聞
+python tools/export.py news --db "C://...//news-main//data//news.sqlite3" --out data/news.json
+
+# 3. 匯出回測曲線（ndxbots 跑完會產生 curve.csv）
+python tools/export.py backtest --curve "C://...//ndxbots//out//curve.csv" --out data/backtests.json
+```
+
+放進 `data/` 後重新整理，新聞頁會顯示「A1 数据快照」、策略頁會顯示「A3 真实回测」，
+並附生成時間。**沒有這兩個檔案時，前端自動退回示例數據，不會壞。**
+
+為什麼用快照而不是即時：GitHub Pages 是純靜態，跑不了 Python。快照讓線上版也能顯示
+真數據，代價是要手動更新一次。要即時，就得由 A1 / A3 自己開 HTTP 端點。
+
 ## 哪些是真的
 
 講清楚，因為示範時這件事會被問。
@@ -133,7 +154,7 @@ application.mount("/app", StaticFiles(directory=PROJECT_ROOT / "web", html=True)
 |---|---|
 | 全部介面邏輯——路由、篩選、游標分頁、取消請求、錯誤狀態、i18n、響應式 | **真的** |
 | 政要監控——`/health`、`/api/v1/system-status`、`/api/v1/people`、`/api/v1/public-records`、`/api/v1/public-records/{id}` | **真實整合**，完全照契約。需要 A2 後端與它的 PostgreSQL 在跑。 |
-| 晨報、新聞、策略、風控、持倉、對話的內容 | **示例數據**。數字由固定種子生成，內部自洽，但**不是真實回測**。 |
+| 晨報、新聞、策略、風控、持倉、對話的內容 | **示例數據**。數字由固定種子生成，內部自洽，但**不是真實回測**。若 `data/` 放了導出的快照，新聞與策略兩頁會改用真數據。 |
 | 登入 | 純展示——任意密碼可進，不做任何驗證。 |
 
 A1（新聞）是 Streamlit 應用、A3（策略）是 CLI，兩者都沒有 HTTP 介面，
@@ -143,8 +164,9 @@ A1（新聞）是 Streamlit 應用、A3（策略）是 CLI，兩者都沒有 HTT
 
 ## 已知不足
 
-1. **A1 與 A3 沒有 HTTP API。** 這兩個模組跑示例數據是設計上的取捨，不是漏做。
-   修在服務側：開一個唯讀端點，然後把 `D` 換成 `fetch`，畫面不用改。
+1. **A1 與 A3 沒有 HTTP API。** 已提供導出路徑（`tools/export.py`），
+   但需要組員先提供 `news.sqlite3` 或回測的 `curve.csv`；在那之前這兩頁仍跑示例數據。
+   要即時而非快照，就得由服務側開唯讀端點。
 2. **A2 的整合只用契約 stub 驗過，沒接過正式資料庫。** stub（`src/stub_api.py`）
    照文件回應格式寫；真正的資料庫在開發機上一直沒有連通過。
 3. **沒有身份驗證。** 登入、配額、訂閱方案都是展示性的；沒有 session、沒有 token、
@@ -201,6 +223,8 @@ A1（新聞）是 Streamlit 應用、A3（策略）是 CLI，兩者都沒有 HTT
 │   ├── DESIGN.zh.md        設計規格——資訊架構、字級、i18n、狀態處理
 │   └── INTEGRATION.zh.md   整合說明——CORS、掛載、資料來源
 ├── screenshots/            桌面、手機、三種語言
+├── data/                   快照放這裡（預設空，前端會退回示例數據）
+├── tools/export.py         A1 / A3 資料匯出腳本
 └── src/
     ├── build.py            把 p*.html / p*.js 合成 index.html
     ├── p1_head.html        head + 設計 token + 全部 CSS

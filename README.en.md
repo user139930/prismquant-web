@@ -138,7 +138,7 @@ Stated plainly, because it matters for the demo.
 |---|---|
 | All UI logic — routing, filtering, cursor pagination, request cancellation, error states, i18n, responsive layout | **Real** |
 | Political watch — `/health`, `/api/v1/system-status`, `/api/v1/people`, `/api/v1/public-records`, `/api/v1/public-records/{id}` | **Real integration**, contract-faithful. Needs the A2 backend and its PostgreSQL running. |
-| Briefing, news, strategy, risk, portfolio, chat content | **Sample data.** Numbers are generated from a fixed seed so they are internally consistent, but they are not a real backtest. |
+| Briefing, news, strategy, risk, portfolio, chat content | **Sample data.** Numbers are generated from a fixed seed and are internally consistent, but they are not a real backtest. Drop an exported snapshot into `data/` to make the news and strategy pages real. |
 | Sign-in | Demo only — any password works, nothing is verified. |
 
 A1 (news) is a Streamlit app and A3 (strategy) is a CLI; neither exposes an HTTP API,
@@ -146,11 +146,25 @@ so the client cannot call them yet.
 
 ---
 
+## Wiring A1 / A3 (snapshot)
+
+Neither service exposes HTTP, but both can export JSON that the client reads directly:
+
+```bash
+python tools/export.py news --db "<...>/news-main/data/news.sqlite3" --report   # inspect first
+python tools/export.py news --db "<...>/news-main/data/news.sqlite3" --out data/news.json
+python tools/export.py backtest --curve "<...>/ndxbots/out/curve.csv" --out data/backtests.json
+```
+
+With the files present the news page shows an "A1 snapshot" badge and the strategy page
+shows an "A3 backtest" badge, both with a generation timestamp. Without them the client
+falls back to the fixtures and says so. `file://` cannot fetch them — serve over http(s).
+
 ## Known gaps
 
-1. **A1 and A3 have no HTTP API.** Those two modules run on fixtures by design, not by
-   oversight. The fix is on the service side: publish a read-only endpoint, then swap
-   the `D` fixture for a `fetch` — the views do not change.
+1. **A1 and A3 have no HTTP API.** An export path exists (`tools/export.py`), but it
+   needs `news.sqlite3` or a backtest `curve.csv` from the other teams' machines first.
+   Real-time instead of a snapshot requires a read-only endpoint on the service side.
 2. **The A2 integration was verified against a contract stub, not production.** The
    stub (`src/stub_api.py`) mirrors the documented response shapes; the real database
    has never been reachable from the development machine.
@@ -213,6 +227,8 @@ so the client cannot call them yet.
 │   ├── DESIGN.zh.md        design specification — IA, type scale, i18n, states
 │   └── INTEGRATION.zh.md   integration guide — CORS, mounting, data provenance
 ├── screenshots/            desktop, mobile, three languages
+├── data/                   snapshots (empty by default -> fixtures)
+├── tools/export.py         A1 / A3 exporters
 └── src/
     ├── build.py            concatenates p*.html / p*.js into index.html
     ├── p1_head.html        head + design tokens + all CSS

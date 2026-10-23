@@ -196,24 +196,42 @@ function refreshPolDom() {
 /* ============================ strategy ============================ */
 let STRAT = 'MF';
 const SERIES = { MF: NAV, TF: TF_S, EV: EV_S };
+function btSource() {
+  if (!LIVE.bt) return null;
+  const it = LIVE.bt.items[0];
+  if (!it || !Array.isArray(it.nav) || it.nav.length < 10) return null;
+  return {
+    name: it.name,
+    series: it.nav,
+    st: it.stats || statsOf(it.nav),
+    bench: Array.isArray(it.benchmark) && it.benchmark.length === it.nav.length ? it.benchmark : null
+  };
+}
 function viewStrategy() {
   const s = D.strategies.find(x => x.id === STRAT);
-  const st = s.st || ST;
-  const series = SERIES[s.id] || NAV;
+  const bt = (STRAT === 'MF') ? btSource() : null;
+  const st = bt ? bt.st : (s.st || ST);
+  const series = bt ? bt.series : (SERIES[s.id] || NAV);
+  const bench = (bt && bt.bench) ? bt.bench : BENCH;
   const mret = monthReturns(series, 21);
-  const rows = D.strategies.map(x => `<tr style="cursor:pointer" data-strat="${x.id}">
+  const rows = D.strategies.map(x => {
+    const live = (x.id === 'MF' && bt) ? bt.st : null;
+    return `<tr style="cursor:pointer" data-strat="${x.id}">
       <td><div class="sym">${esc(x.name)}</div><div class="sub">${esc(x.en)}</div></td>
       <td class="w" style="font-size:11px;color:#7b8492">${esc(x.mkt)}</td>
-      <td class="r ${x.ann >= 0 ? 'up' : 'down'}">${pct(x.ann)}</td>
-      <td class="r down">${x.mdd.toFixed(2)}%</td>
-      <td class="r">${x.sharpe.toFixed(2)}</td>
+      <td class="r ${((live ? live.ann : x.ann) >= 0) ? 'up' : 'down'}">${pct(live ? live.ann : x.ann)}</td>
+      <td class="r down">${(live ? live.mdd : x.mdd).toFixed(2)}%</td>
+      <td class="r">${(live ? live.sharpe : x.sharpe).toFixed(2)}</td>
       <td class="r">${x.turnover.toFixed(1)}x</td>
       <td class="w">${STRAT === x.id ? `<span class="tag green">${isZh() ? '当前查看' : 'viewing'}</span>` : `<span class="tag outline">${isZh() ? '查看' : 'view'}</span>`}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   return pageHead('STRATEGY ENGINE / A3', t('page.strategy.t'), t('page.strategy.s'),
-    `<span class="tag outline">${isZh() ? '回测区间' : 'Backtest'} 2025-11 → 2026-10</span>
-     <button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
+    (bt
+      ? `<span class="tag green">${isZh() ? 'A3 真实回测' : 'A3 backtest'}</span><span class="stamp">${esc((LIVE.bt.generated_at || '').slice(0, 16).replace('T', ' '))} UTC</span>`
+      : `<span class="tag outline">${isZh() ? '回测区间' : 'Backtest'} 2025-11 → 2026-10</span>`)
+     + `<button class="btn sm" data-act="refresh">↻ ${esc(t('ui.refresh'))}</button>`)
     + `<div class="stats">
       <div class="stat"><div class="k">${isZh() ? '年化收益' : 'Annualised'}</div><div class="v up">${pct(st.ann)}</div><div class="d">${isZh() ? '基准 ' : 'Benchmark '}${pct(BST.ann)}</div></div>
       <div class="stat"><div class="k">${isZh() ? '最大回撤' : 'Max drawdown'}</div><div class="v down">${st.mdd.toFixed(2)}<small>%</small></div><div class="d">${isZh() ? '基准 ' : 'Benchmark '}${BST.mdd.toFixed(2)}%</div></div>
@@ -221,9 +239,9 @@ function viewStrategy() {
       <div class="stat"><div class="k">${isZh() ? '年化波动' : 'Volatility'}</div><div class="v">${st.vol.toFixed(2)}<small>%</small></div><div class="d">${isZh() ? '目标 10%' : 'target 10%'}</div></div>
      </div>
      <section class="panel">
-       <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.nav'))} — ${esc(s.name)}</h2>
+       <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.nav'))} — ${esc(bt ? (bt.name || s.name) : s.name)}</h2>
          <div class="legend"><span><i style="background:#c8453a"></i>${esc(isZh() ? '策略净值' : 'Strategy')}</span><span><i style="background:#b8c0cb"></i>${esc(isZh() ? '基准 NDX 100' : 'Benchmark')}</span></div></div>
-       <div class="panel-b" style="padding:10px 8px 4px">${navSvg(series, BENCH, 980, 268)}</div>
+       <div class="panel-b" style="padding:10px 8px 4px">${navSvg(series, bench, 980, 268)}</div>
      </section>
      <div class="split c2e" style="margin-top:14px">
        <section class="panel">
@@ -243,7 +261,7 @@ function viewStrategy() {
        </section>
        <div class="stack">
          <section class="panel">
-           <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.attrib'))}</h2><div class="right">${isZh() ? '累计' : 'cumulative'} ${pct(ST.total, 1)}</div></div>
+           <div class="panel-h"><h2><span class="accent"></span>${esc(t('str.attrib'))}</h2><div class="right">${bt ? `<span class="tag outline" style="margin-right:6px">${isZh() ? '示例' : 'sample'}</span>` : ''}${isZh() ? '累计' : 'cumulative'} ${pct(ST.total, 1)}</div></div>
            <div class="panel-b">
              ${barsHtml([
       { k: isZh() ? '动量因子' : 'Momentum', v: 8.1 },

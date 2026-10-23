@@ -340,4 +340,24 @@ const D = {
     { me: false, html: `<p>早上好。隔夜信息已经收敛完毕，${isZh() ? '现在是 08:16，距美股开盘还有 5 小时 44 分。' : ''}</p><p>今天只有一件事值得你先看：<b>半导体行业敞口已经顶到 31.4%</b>，超过 30% 的硬上限。所以 AVGO 的加仓被 A4 挡掉了，其余三张意图可以走。</p><p>另外 BTC 趋势因子转负，建议把仓位从 6.2% 降到 3.0%，分批做。</p>`, ev: 'run_id: R-20261023-0816\nA5 ← A1(6 clusters) / A2(12 statements) / A3(4 intents) / A4(1 veto,1 degrade)\ngate: sector_concentration=31.4% > limit=30.0%' }
   ]
 };
+
+/* ============================ live snapshots ============================
+   Optional: if data/news.json or data/backtests.json exist (produced by
+   tools/export.py from A1's SQLite DB and A3's backtest output), the views
+   read them instead of the fixtures. Missing files = fixtures, no error.
+*/
+const LIVE = { news: null, bt: null };
+async function loadSnapshots() {
+  const grab = async p => {
+    try {
+      const r = await fetch(p, { cache: 'no-store' });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) { return null; }
+  };
+  const [n, b] = await Promise.all([grab('./data/news.json'), grab('./data/backtests.json')]);
+  if (n && Array.isArray(n.items) && n.items.length) LIVE.news = n;
+  if (b && Array.isArray(b.items) && b.items.length) LIVE.bt = b;
+  return !!(LIVE.news || LIVE.bt);
+}
 </script>

@@ -399,6 +399,9 @@ function initLang() {
   render();
   setConn(A2.checked ? 'demo' : 'demo');
   probe();
+  loadSnapshots().then(changed => {
+    if (changed && (routeName() === 'news' || routeName() === 'strategy')) render();
+  });
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/[?&]nosw=1/.test(location.search)) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
   }
