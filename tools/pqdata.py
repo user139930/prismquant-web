@@ -78,14 +78,15 @@ def news_sample(db_path):
     return parse_json(row["metadata_json"]), parse_json(row["analysis_json"])
 
 
-def news_items(db_path, limit=60, per_source=0):
+def news_items(db_path, limit=60, per_source=0, analyzed_only=False):
     con = open_news(db_path)
     cols = [r["name"] for r in con.execute("PRAGMA table_info(articles)")]
     order = "published_sort" if "published_sort" in cols else "id"
     fetch = limit if not per_source else max(limit * 12, 400)
+    where = "analysis_json IS NOT NULL" if analyzed_only else "status != 'error'"
     rows = con.execute(
-        "SELECT * FROM articles WHERE status != 'error' "
-        "ORDER BY %s DESC LIMIT ?" % order, (fetch,)).fetchall()
+        "SELECT * FROM articles WHERE %s "
+        "ORDER BY %s DESC LIMIT ?" % (where, order), (fetch,)).fetchall()
     con.close()
 
     items = []
@@ -139,8 +140,8 @@ def news_items(db_path, limit=60, per_source=0):
     return items
 
 
-def news_payload(db_path, limit=60, per_source=0):
-    items = news_items(db_path, limit, per_source)
+def news_payload(db_path, limit=60, per_source=0, analyzed_only=False):
+    items = news_items(db_path, limit, per_source, analyzed_only)
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": os.path.basename(db_path),
