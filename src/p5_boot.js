@@ -95,6 +95,27 @@ async function apiGet(path, params, signal) {
     throw e;
   } finally { clearTimeout(timer); }
 }
+async function apiPost(path, body) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30000);
+  try {
+    const res = await fetch(apiUrl(path), {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : '{}',
+      signal: ctrl.signal
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => null);
+      throw new Error((b && b.detail && b.detail.message) || ('HTTP ' + res.status));
+    }
+    return await res.json();
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(isZh() ? '采集超时' : 'Collection timed out.');
+    if (e instanceof TypeError) throw new Error(isZh() ? '无法连接后端' : 'Cannot reach backend.');
+    throw e;
+  } finally { clearTimeout(timer); }
+}
 async function probe() {
   A2.checking = true;
   try {
@@ -229,8 +250,17 @@ async function hardRefresh() {
   }
   if (route === 'political') {
     if (!A2.live) { probe(); toast(isZh() ? '正在尝试连接后端…' : 'Probing backend…'); return; }
+    toast(isZh() ? '正在触发采集（抓取 ECB / Trump）…' : 'Triggering collection (ECB / Trump)…');
+    let colMsg = null;
+    try {
+      const col = await apiPost('/api/v1/operations/collect');
+      const saved = (col.items || []).reduce((n, x) => n + (x.saved || 0), 0);
+      const states = (col.items || []).map(x => x.status).join(', ');
+      if (saved > 0) colMsg = isZh() ? ('采集到 ' + saved + ' 条新内容') : ('Collected ' + saved + ' new items');
+      else colMsg = isZh() ? ('采集完成，本次无新内容（' + states + '）') : ('Collected, no new items (' + states + ')');
+    } catch (e) { colMsg = e.message; }
     await Promise.all([loadSys(), loadRecords(false, true)]);
-    toast(isZh() ? '已重新读取后端数据' : 'Re-read from the backend');
+    toast(colMsg || (isZh() ? '已重新读取后端数据' : 'Re-read from the backend'));
     return;
   }
   render();
