@@ -83,7 +83,7 @@ def news_items(db_path, limit=60):
     cols = [r["name"] for r in con.execute("PRAGMA table_info(articles)")]
     order = "published_sort" if "published_sort" in cols else "id"
     rows = con.execute(
-        "SELECT * FROM articles WHERE analysis_json IS NOT NULL "
+        "SELECT * FROM articles WHERE status != 'error' "
         "ORDER BY %s DESC LIMIT ?" % order, (limit,)).fetchall()
     con.close()
 
@@ -113,6 +113,7 @@ def news_items(db_path, limit=60):
 
         items.append({
             "id": r.get("id"),
+            "analyzed": bool(r.get("analysis_json")),
             "title": deep_find(meta, ["title", "headline"]) or deep_find(analy, ["fact"]) or "(untitled)",
             "url": r.get("canonical_url"),
             "source": deep_find(meta, ["source", "publisher", "site", "feed"]) or "",
@@ -133,6 +134,7 @@ def news_payload(db_path, limit=60):
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": os.path.basename(db_path),
         "count": len(items),
+        "analysed": sum(1 for x in items if x.get("analyzed")),
         "items": items,
     }
 

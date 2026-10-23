@@ -1101,6 +1101,7 @@ function newsItems() {
     summary: x.summary || x.reasoning || '',
     tags: (x.tickers || []).slice(0, 4),
     sources: x.source ? [x.source] : [],
+    analyzed: !!x.analyzed,
     conf: typeof x.confidence === 'number' ? x.confidence : null
   }));
 }
@@ -1111,7 +1112,7 @@ function liveNewsStats(items) {
   const avg = confs.length ? (confs.reduce((a, b) => a + b, 0) / confs.length) : null;
   const src = (LIVE.news.source || 'news.sqlite3');
   return `<div class="stats">
-    <div class="stat"><div class="k">${isZh() ? '已分析条目' : 'Analysed items'}</div><div class="v">${items.length}</div><div class="d">${esc(src)}</div></div>
+    <div class="stat"><div class="k">${isZh() ? '条目' : 'Items'}</div><div class="v">${items.length}</div><div class="d">${isZh() ? '已分析 ' + items.filter(x => x.analyzed).length + ' 条 · ' : ''}${esc(src)}</div></div>
     <div class="stat"><div class="k">${isZh() ? '平均置信度' : 'Mean confidence'}</div><div class="v">${avg === null ? '—' : (avg * 100).toFixed(0) + '<small>%</small>'}</div><div class="d">${isZh() ? '由 A1 分析器给出' : 'from the A1 analyser'}</div></div>
     <div class="stat"><div class="k">${isZh() ? '情绪分布' : 'Sentiment'}</div><div class="v" style="font-size:17px;letter-spacing:1px"><span class="up">${c.pos}</span> / <span style="color:#8a929f">${c.neu}</span> / <span class="down">${c.neg}</span></div><div class="d">${isZh() ? '利多 / 中性 / 利空' : 'bull / neutral / bear'}</div></div>
     <div class="stat"><div class="k">${isZh() ? '快照时间' : 'Snapshot'}</div><div class="v" style="font-size:17px">${esc((LIVE.news.generated_at || '').slice(5, 10).replace('-', '/'))}</div><div class="d">${isZh() ? '静态导出，非实时' : 'static export, not live'}</div></div>
