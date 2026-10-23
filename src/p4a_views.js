@@ -1,6 +1,7 @@
 <script>
 /* ============================ charts ============================ */
 const MONTHS = ['2025-11', '2026-02', '2026-05', '2026-08', '2026-10'];
+let NEWS_FILTER = 'all';
 
 function navSvg(series, bench, w, h) {
   const padL = 46, padR = 10, padT = 12, padB = 24;
@@ -127,8 +128,8 @@ function viewOverview() {
     ['A1', isZh() ? '新闻代理' : 'News', 'news-main · Streamlit', isZh() ? '无 HTTP 接口' : 'no HTTP API', LIVE.news ? ok : no],
     ['A2', isZh() ? '政治监控' : 'Political', 'political-monitor · FastAPI', isZh() ? '需 PostgreSQL + 采集' : 'needs PG', A2.live ? ok : no],
     ['A3', isZh() ? '执行代理' : 'Execution', 'ndxbots · CLI', isZh() ? '回测需五分钟数据' : 'needs 5-min bars', LIVE.bt ? ok : no],
-    ['A4', isZh() ? '风险控制' : 'Risk', isZh() ? '未提供代码' : 'not provided', na],
-    ['A5', isZh() ? '指挥官' : 'Commander', isZh() ? '未提供代码' : 'not provided', na]
+    ['A4', isZh() ? '风险控制' : 'Risk', '—', isZh() ? '未提供代码' : 'not provided', na],
+    ['A5', isZh() ? '指挥官' : 'Commander', '—', isZh() ? '未提供代码' : 'not provided', na]
   ];
   const rows = agents.map(a => `<div class="agent-row">
       <span class="agent-id">${a[0]}</span>
@@ -267,6 +268,15 @@ function viewNews() {
        <section class="panel">
          <div class="panel-h"><h2><span class="accent"></span>${isZh() ? '事件簇' : 'Event clusters'}</h2><div class="right">${totalSrc} ${isZh() ? '条原始新闻' : 'raw items'}</div></div>
          <div class="filterbar">${chips}<span style="margin-left:auto;font-size:10px;color:#a9b0bb">${isZh() ? '按事件权重排序' : 'by event weight'}</span></div>
+         ${(() => {
+      const an = SRC.filter(e => e.analyzed).length;
+      if (an || !SRC.length) return '';
+      return `<div style="margin:0 0 6px;padding:9px 11px;background:#fbf8ef;border:1px solid #ecdfc0;border-radius:6px;font-size:11px;line-height:1.9;color:#8a7448">`
+        + (isZh()
+          ? '这 ' + SRC.length + ' 条<b>只做了采集，没有跑 LLM 分析</b>，所以情绪一律中性、主题未分类、置信度为空——这是真实状态，不是坏了。分析需要跑 <code>news-main</code> 的 <code>--analyze</code>，且要一个 LLM 的 API key；没跑就不假造这些字段。'
+          : 'These ' + SRC.length + ' items were <b>collected but not analysed</b>, so sentiment is neutral, topics are unassigned and confidence is empty — that is the real state, not a bug. Run <code>--analyze</code> in <code>news-main</code> with an LLM API key to fill them in.')
+        + `</div>`;
+    })()}
          <div>${list}</div>
        </section>
        <div class="stack">

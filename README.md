@@ -26,11 +26,15 @@ IVE / HKIIT，Group 1。
 
 ![接入狀態](screenshots/00_接入狀態.png)
 
-| 政要監控 · 已連線真後端 | 新聞情報 · 未導入快照 |
+| 政要監控 · 已連線真後端 | 新聞情報 · 真實快照（24 條） |
 |---|---|
-| ![政要監控](screenshots/01_政要監控_已連線.png) | ![新聞情報](screenshots/03_新聞情報_空狀態.png) |
+| ![政要監控](screenshots/01_政要監控_已連線.png) | ![新聞情報](screenshots/03_新聞情報_真實快照.png) |
 
 其餘在 [`screenshots/`](screenshots)：空狀態、登入頁、手機版、繁體。
+
+> 這兩張是**本機實跑**的結果，不是 GitHub Pages 上的樣子。
+> 線上版沒有 `127.0.0.1` 的後端，政要監控會是空狀態；`data/news.json` 有 commit 上去，
+> 所以新聞情報在線上也能看到那 24 條。
 
 ## 八個模組
 
@@ -61,7 +65,7 @@ IVE / HKIIT，Group 1。
                     │  render() 換掉 #view          │
                     ├──────────────────────────────┤
                     │  資料層                       │
-                    │   D      示例數據             │
+                    │   D      快照 data/*.json      │
                     │   A2     真實 fetch client ───┼──► FastAPI  /api/v1/*
                     └──────────────────────────────┘
 ```
@@ -99,7 +103,11 @@ IVE / HKIIT，Group 1。
 ## 怎麼跑
 
 ### 只是想看
-雙擊 `index.html`。全部都會渲染，用的是示例數據，頁首會標示。
+雙擊 `index.html`。介面會完整渲染；接上數據的頁面（政要監控、新聞情報）顯示真數據，
+還沒接上的顯示空狀態並寫清楚缺什麼。
+
+因為是 `file://`，瀏覽器會擋掉 `fetch`，所以**兩個來源都讀不到**——
+要看到數據就用 `start-frontend.cmd` 或 `tools/api_server.py`（下面有）。
 
 ### 要接真實的政要監控 API
 先起 A2 服務（另一個 FastAPI 專案），把這個來源加進白名單，然後重啟 API：
@@ -131,18 +139,25 @@ application.mount("/app", StaticFiles(directory=PROJECT_ROOT / "web", html=True)
 A1 與 A3 沒有 HTTP 介面，但它們的資料可以匯出成 JSON，前端直接讀：
 
 ```bash
-# 1. 先看資料庫裡有什麼（只印結構，不改任何東西）
+# 0. 先採集一次（在 news-main 裡；這一步會真的去抓 RSS）
+python -m src.rss_pipeline --limit-per-source 12 --max-age-days 10
+
+# 1. 看資料庫裡有什麼（只印結構，不改任何東西）
 python tools/export.py news --db "C://...//news-main//data//news.sqlite3" --report
 
-# 2. 匯出新聞
-python tools/export.py news --db "C://...//news-main//data//news.sqlite3" --out data/news.json
+# 2. 匯出新聞（--per-source 2 = 每個來源最多 2 條，避免整頁都是同一個來源）
+python tools/export.py news --db "C://...//news-main//data//news.sqlite3" \
+    --limit 24 --per-source 2 --out data/news.json
 
 # 3. 匯出回測曲線（ndxbots 跑完會產生 curve.csv）
 python tools/export.py backtest --curve "C://...//ndxbots//out//curve.csv" --out data/backtests.json
 ```
 
-放進 `data/` 後重新整理，新聞頁會顯示「A1 数据快照」、策略頁會顯示「A3 真实回测」，
-並附生成時間。**沒有這兩個檔案時，前端自動退回示例數據，不會壞。**
+`--per-source` 是必要的：HKEX 披露易一次能丟幾百條公告，不設上限的話
+整頁會被同一個來源吃光。
+
+放進 `data/` 後重新整理，新聞頁會顯示「A1 数据快照」並附生成時間。
+**沒有這兩個檔案時，前端顯示空狀態，不會壞。**
 
 為什麼用快照而不是即時：GitHub Pages 是純靜態，跑不了 Python。快照讓線上版也能顯示
 真數據，代價是要手動更新一次。要即時，就得由 A1 / A3 自己開 HTTP 端點。
@@ -173,7 +188,7 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 |---|---|
 | 新聞情報 / 策略與回測 | 重新抓一次 `data/*.json`（帶破快取參數）。檔案換了就提示「已更新到 …」，沒換就提示「沒有新數據」 |
 | 政要監控 | 重新讀取 `/api/v1/people`、`public-records`、`system-status`；另外每 60 秒自動重讀一次（分頁隱藏時暫停） |
-| 其他頁面 | 重新渲染（本來就是示例數據，不會變） |
+| 其他頁面 | 重新渲染（沒有資料來源的頁面不會變） |
 
 注意「刷新」只能重新抓**已經存在**的資料。A1 / A3 的資料要變新，仍然要有人重新匯出
 並 commit —— 這是靜態網站的先天限制，不是按鈕的問題。
@@ -184,7 +199,7 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 |---|---|---|
 | 接入狀態 | 五個代理的接入判斷（不是文案，是執行期狀態） | — |
 | 晨報 | A5 的一次 run（含四張意圖） | 空狀態 + 缺什麼 |
-| 新聞情報 | `data/news.json` 或 `tools/api_server.py` | 空狀態 + 匯出指令 |
+| 新聞情報 | `data/news.json`（已匯入 24 條）或 `tools/api_server.py` | 空狀態 + 匯出指令 |
 | 政要監控 | A2 `/api/v1/*` **實時讀取** | 空狀態（不內置示例發言） |
 | 策略與回測 | `data/backtests.json` | 空狀態 + 匯出指令 |
 | 風控閘門 | A4 風控引擎 | 永遠空狀態（A4 無代碼） |
@@ -209,13 +224,28 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 **注意**：GitHub Pages 上連不到 `127.0.0.1:8000`，所以線上版這一頁仍是空狀態。
 要看到上面那張截圖，必須在本機同時開著 PostgreSQL 與 API。
 
+新聞情報這一頁同樣是真的抓來的：
+
+| 步驟 | 結果 |
+|---|---|
+| 環境 | `news-main` 建 `.venv`，裝 `feedparser 6.0.14` / `streamlit 1.66.1` |
+| 採集 | `python -m src.rss_pipeline --limit-per-source 12 --max-age-days 10` → 抓到 190 篇（19 新增、172 重複、3 個來源失敗） |
+| 匯出 | `tools/export.py news --limit 24 --per-source 2` → `data/news.json`，17.6 KB，24 條 |
+| 來源 | 16 個：披露易、CNBC（Top News / Earnings / Economy）、香港電台、BBC、Financial Times、ECB、HKEX、EIA、UBS CIO、State Street、Apollo、金管局、FINRA、Apple Newsroom |
+| 前端 | 打開就顯示這 24 條，頁首標「A1 数据快照 · 已分析 0 条」 |
+
+**「已分析 0 条」是正確的，不是 bug。** 標題是真的，但情緒 / 主題 / 命中股票
+要跑 LLM 分析才有，而分析需要 API key（`news-main` 的 `--analyze`）。
+沒有 key 的話，所有條目就是中性、無主題——這一版刻意不假造它們。
+
 ## 已知不足
 
-1. **九頁裡有五頁目前是空的**：A1 要一次採集導出、A2 要啟動後端並跑採集、
-   A3 要回測（缺五分鐘數據與額度）、A4 與 A5 沒有可運行的程式碼。
-   導出路徑已備好（`tools/export.py`、`tools/api_server.py`）。
-2. **A2 的整合只用契約 stub 驗過，沒接過正式資料庫。** stub（`src/stub_api.py`）
-   照文件回應格式寫；真正的資料庫在開發機上一直沒有連通過。
+1. **九頁裡有三頁仍然空的**：A3 要回測（缺五分鐘數據與額度）、A4 與 A5 沒有可運行的
+   程式碼。A1 與 A2 已在本機跑通（見上一節），但 A2 只在開著後端的那台機器上成立。
+2. **A1 的新聞有標題、沒分析。** 情緒、主題、命中股票要靠 LLM；沒有 API key 就是
+   「已分析 0 条」。導出路徑已備好（`tools/export.py`、`tools/api_server.py`）。
+2b. **A3 的回測跑不出來。** 它需要原生五分鐘 K 線，而 Futu OpenD 的
+   `get_history_kl_quota` 只剩約 299 次，額度不足以支撐一次完整回測。
 3. **沒有身份驗證。** 登入、配額、訂閱方案都是展示性的；沒有 session、沒有 token、
    沒有權限檢查。
 4. **圖表沒有 hover 互動**——沒有 tooltip、沒有十字準線、不能縮放。
@@ -232,9 +262,11 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 ## 未來優化
 
 **第一階段——把鏈路接起來（本學期）**
-- A1 開 `/api/v1/news/events`、A3 開 `/api/v1/strategy/backtests`，
-  把 `viewNews()` 與 `viewStrategy()` 裡的 `D` 換成 `fetch`。
-- 把 A2 的 PostgreSQL 起起來，照整合清單重跑一次驗收。
+- A1 目前是「快照 + 本機 API」兩條路，都已經能用；下一步是讓 A1 自己在
+  Streamlit 旁邊常駐一個 `/api/v1/news/events`，就不用匯出、也不用開 `api_server.py`。
+- A3 開 `/api/v1/strategy/backtests`（前提是拿到五分鐘 K 線額度）。
+- A2 已接上真實 PostgreSQL 並跑通；剩下的是把它部署到一台常開的機器，
+  線上版才會脫離空狀態。
 - 把指揮官目前的規則式回覆換成真的編排端點（`POST /api/v1/commander/run`），
   證據鏈的呈現方式不用改。
 
@@ -270,14 +302,16 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 │   ├── DESIGN.zh.md        設計規格——資訊架構、字級、i18n、狀態處理
 │   └── INTEGRATION.zh.md   整合說明——CORS、掛載、資料來源
 ├── screenshots/            桌面、手機、三種語言
-├── data/                   快照放這裡（預設空，前端會退回示例數據）
+├── data/                   快照放這裡（news.json 已匯入；沒有就顯示空狀態）
+├── tools/pqdata.py         讀 A1 SQLite / A3 CSV 的共用讀取層
 ├── tools/export.py         A1 / A3 資料匯出腳本
+├── tools/api_server.py      零依賴本機伺服器：靜態檔 + 動態 /data + /api/v1
 └── src/
     ├── build.py            把 p*.html / p*.js 合成 index.html
     ├── p1_head.html        head + 設計 token + 全部 CSS
     ├── p2_body.html        靜態外殼 + 登入頁
     ├── p0_hant.js          繁簡對照表（OpenCC s2hk 生成）
-    ├── p3_data.js          i18n 字典、輔助函式、示例數據
+    ├── p3_data.js          i18n 字典、輔助函式、快照載入
     ├── p4a_views.js        圖表、晨報、新聞
     ├── p4b_*.js            政要監控（真實 API）、策略
     ├── p4c_*.js            風控、對話、持倉、學院

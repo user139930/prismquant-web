@@ -42,7 +42,7 @@ def cmd_news(args):
         print(json.dumps(analy, ensure_ascii=False, indent=2)[:1400])
         return
 
-    payload = pqdata.news_payload(args.db, args.limit)
+    payload = pqdata.news_payload(args.db, args.limit, args.per_source)
     write_out(args.out, payload, "news items")
 
 
@@ -59,6 +59,7 @@ def main():
     n.add_argument("--db", required=True)
     n.add_argument("--out", default="data/news.json")
     n.add_argument("--limit", type=int, default=60)
+    n.add_argument("--per-source", type=int, default=0, help="每个来源最多取几条，0 表示不限制")
     n.add_argument("--report", action="store_true", help="print schema and one sample record")
     n.set_defaults(func=cmd_news)
 

@@ -78,13 +78,14 @@ def news_sample(db_path):
     return parse_json(row["metadata_json"]), parse_json(row["analysis_json"])
 
 
-def news_items(db_path, limit=60):
+def news_items(db_path, limit=60, per_source=0):
     con = open_news(db_path)
     cols = [r["name"] for r in con.execute("PRAGMA table_info(articles)")]
     order = "published_sort" if "published_sort" in cols else "id"
+    fetch = limit if not per_source else max(limit * 12, 400)
     rows = con.execute(
         "SELECT * FROM articles WHERE status != 'error' "
-        "ORDER BY %s DESC LIMIT ?" % order, (limit,)).fetchall()
+        "ORDER BY %s DESC LIMIT ?" % order, (fetch,)).fetchall()
     con.close()
 
     items = []
@@ -116,7 +117,7 @@ def news_items(db_path, limit=60):
             "analyzed": bool(r.get("analysis_json")),
             "title": deep_find(meta, ["title", "headline"]) or deep_find(analy, ["fact"]) or "(untitled)",
             "url": r.get("canonical_url"),
-            "source": deep_find(meta, ["source", "publisher", "site", "feed"]) or "",
+            "source": deep_find(meta, ["source_name", "feed_name", "source", "publisher", "site", "feed"]) or "",
             "published_at": deep_find(meta, ["published", "published_at", "date"]) or r.get("published_sort"),
             "summary": deep_find(meta, ["summary", "description", "excerpt"]) or deep_find(analy, ["fact"]) or "",
             "sentiment": sentiment,
@@ -125,11 +126,21 @@ def news_items(db_path, limit=60):
             "confidence": conf,
             "tickers": tickers[:6],
         })
+    if per_source:
+        seen, capped = {}, []
+        for it in items:
+            key = it.get("source") or ""
+            if seen.get(key, 0) >= per_source:
+                continue
+            seen[key] = seen.get(key, 0) + 1
+            capped.append(it)
+        items = capped[:limit]
+
     return items
 
 
-def news_payload(db_path, limit=60):
-    items = news_items(db_path, limit)
+def news_payload(db_path, limit=60, per_source=0):
+    items = news_items(db_path, limit, per_source)
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": os.path.basename(db_path),

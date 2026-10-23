@@ -45,13 +45,21 @@ function setConn(kind) {
     : (isZh() ? '数据源未接入' : 'No source');
   const note = $('#conn-note');
   if (note) {
-    note.textContent = kind === 'ok'
-      ? (isZh() ? 'A2 政治监控读取真实后端 · 其余页面为真实快照或空状态' : 'A2 reads the live backend; other pages are real snapshots or empty')
-      : (isZh()
+    if (kind === 'ok') {
+      note.textContent = isZh() ? 'A2 政治监控读取真实后端 · 其余页面为真实快照或空状态' : 'A2 reads the live backend; other pages are real snapshots or empty';
+    } else {
+      const hasNews = !!(LIVE.news && LIVE.news.items && LIVE.news.items.length);
+      const hasBt = !!(LIVE.bt && LIVE.bt.items && LIVE.bt.items.length);
+      note.textContent = isZh()
         ? (location.protocol === 'file:'
           ? 'file:// 打开时无法连接本机 API · 请用 start-frontend.cmd'
-          : 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据')
-        : 'A2 offline, no snapshots imported — only real data is shown');
+          : (hasNews || hasBt
+            ? 'A2 未连接 · A1 快照已导入' + (hasBt ? ' · A3 回测已导入' : '') + ' · 页面只显示真实数据'
+            : 'A2 未连接 · A1/A3 未导入快照 · 页面只显示真实数据'))
+        : (hasNews || hasBt
+          ? 'A2 offline · A1 snapshot imported' + (hasBt ? ' · A3 backtest imported' : '') + ' — only real data is shown'
+          : 'A2 offline, no snapshots imported — only real data is shown');
+    }
   }
 }
 function apiUrl(p) { return (A2.base || '') + p; }
@@ -455,6 +463,7 @@ function initLang() {
   probe();
   startPolling();
   loadSnapshots().then(changed => {
+    setConn(A2.live ? 'ok' : 'demo');
     if (changed && (routeName() === 'news' || routeName() === 'strategy')) render();
   });
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/[?&]nosw=1/.test(location.search)) {
