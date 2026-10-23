@@ -265,20 +265,21 @@ python tools/api_server.py --news-db "<...>\news.sqlite3" --curve "<...>\curve.c
 |---|---|
 | 環境 | `news-main` 建 `.venv`，裝 `feedparser 6.0.14` / `streamlit 1.66.1` |
 | 採集 | `python -m src.rss_pipeline --limit-per-source 12 --max-age-days 10` → 抓到 190 篇（19 新增、172 重複、3 個來源失敗） |
-| 匯出 | `tools/export.py news --limit 24 --per-source 2` → `data/news.json`，17.6 KB，24 條 |
-| 來源 | 16 個：披露易、CNBC（Top News / Earnings / Economy）、香港電台、BBC、Financial Times、ECB、HKEX、EIA、UBS CIO、State Street、Apollo、金管局、FINRA、Apple Newsroom |
-| 前端 | 打開就顯示這 24 條，頁首標「A1 数据快照 · 已分析 0 条」 |
+| 分析 | `--analyze`（OpenRouter + `deepseek/deepseek-v4.1-flash`）→ 31 條分析成功 |
+| 匯出 | `tools/export.py news --limit 30 --per-source 3 --analyzed-only` → `data/news.json`，25 條全部已分析 |
+| 情緒 | 5 利多 / 17 中性 / 3 利空，平均置信度 81%，主題標籤齊全 |
+| 前端 | 打開就顯示這 25 條，頁首標「A1 数据快照」 |
 
-**「已分析 0 条」是正確的，不是 bug。** 標題是真的，但情緒 / 主題 / 命中股票
-要跑 LLM 分析才有，而分析需要 API key（`news-main` 的 `--analyze`）。
-沒有 key 的話，所有條目就是中性、無主題——這一版刻意不假造它們。
+**情緒與主題是 LLM 真的跑出來的。** 用老師給的 OpenRouter key + 最便宜的 flash 模型，
+190 條全部分析完成本約幾塊錢港幣。完整操作（含換模型、省錢原則）見
+[`tools/A1分析操作說明.md`](tools/A1分析操作說明.md)。
 
 ## 已知不足
 
 1. **九頁裡有三頁仍然空的**：A3 要回測（缺五分鐘數據與額度）、A4 與 A5 沒有可運行的
    程式碼。A1 與 A2 已在本機跑通（見上一節），但 A2 只在開著後端的那台機器上成立。
-2. **A1 的新聞有標題、沒分析。** 情緒、主題、命中股票要靠 LLM；沒有 API key 就是
-   「已分析 0 条」。導出路徑已備好（`tools/export.py`、`tools/api_server.py`）。
+2. **A1 的新聞已有情緒與主題**（LLM 分析過的），但這是快照、不是實時；要更新就重跑
+   `--analyze` + 重新導出。詳細步驟見 `tools/A1分析操作說明.md`。
 2b. **A3 的回測跑不出來。** 它需要原生五分鐘 K 線，而 Futu OpenD 的
    `get_history_kl_quota` 只剩約 299 次，額度不足以支撐一次完整回測。
 3. **沒有身份驗證。** 登入、配額、訂閱方案都是展示性的；沒有 session、沒有 token、
